@@ -11,7 +11,7 @@ mkdir data docs results tests
 The intended contents of each of these directories
 is explained in the [Good Research Code Handbook](https://goodresearch.dev/setup.html#create-a-project-skeleton).
 
-Now you should be able to run the scripts, such as:
+Now you should be able to run the scripts, for example:
 ```commandline
 python scripts/train_logical_network.py
 ```
