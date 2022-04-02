@@ -13,8 +13,10 @@ class Manager():
 
         self.cfg = cfg_funcs.load_configs(config_set_name)
 
-        # TODO automatically determine device
-        if self.cfg.device == 'gpu':
+        # determine device
+        if (self.cfg.device == 'auto' and torch.cuda.is_available()) or self.cfg.device == 'gpu':
             self.device = torch.device('cuda')
-        elif self.cfg.device == 'cpu':
+        elif self.cfg.device == 'auto' or self.cfg.device == 'cpu':
             self.device = torch.device('cpu')
+        else:
+            raise Exception('Invalid device in config!')

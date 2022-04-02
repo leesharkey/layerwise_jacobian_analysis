@@ -2,6 +2,7 @@ defaults:
     device: gpu
     results_dir: ../results/
     data_dir: ../data/
+    device: auto
     model_save_interval: 10  # epochs
     print_log_interval: 100  # batches
     num_models_to_keep: 2 #TODO delete models except the last n
