@@ -162,6 +162,7 @@ class LogicalNetworkTrainingManager(TrainingManager):
         self.net = NLayerPerceptron(
             sizes=self.cfg.networks.logical.sizes,
             last_act=nn.Sigmoid,
+            device=self.device,
         )
 
         self.train_dataset = LogicalDataGenerator(size=10000)
