@@ -4,7 +4,7 @@ import os, shutil
 
 def load_configs(configs_name):
     print("[Loading configurations]")
-    with open("../configs/configs.yml", "r") as f:
+    with open("configs/configs.yml", "r") as f:
         hp = yaml.safe_load(f)[configs_name]
     for key, value in hp.items():
         print(key, ":", value)

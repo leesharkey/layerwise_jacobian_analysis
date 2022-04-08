@@ -1,7 +1,6 @@
 defaults:
-    device: gpu
-    results_dir: ../results/
-    data_dir: ../data/
+    results_dir: results/
+    data_dir: data/
     device: auto
     model_save_interval: 10  # epochs
     print_log_interval: 100  # batches
@@ -13,10 +12,10 @@ defaults:
             momentum: 0.9
             dampening: 0.1
             weight_decay: 0.001
-            training_results_dir: ../results/network_training/
+            training_results_dir: results/network_training/
         logical:
             load_model_name: null #20220214_203826/model_00030
-            num_epochs: 1000
+            num_epochs: 100
             batch_size: 16
             sizes: [ 4, 128, 64, 1 ]
         mnist:
@@ -24,4 +23,3 @@ defaults:
             num_epochs: 1000
             batch_size: 32
             sizes: [ 784, 1024, 1024, 512, 10 ] # Alternatively, Schmidhuber former SoTA: [ 784, 2500, 2000, 1500, 1000, 500, 10 ]
-
