@@ -213,14 +213,14 @@ class MnistNetworkTrainingManager(TrainingManager):
         )
 
         self.train_dataset = torchvision.datasets.MNIST(
-            root="../data/mnist/",
+            root="data/mnist/",
             train=True,
             transform=transforms.ToTensor(),
             download=True,
         )
 
         self.test_dataset = torchvision.datasets.MNIST(
-            root="../data/mnist/", train=False, transform=transforms.ToTensor()
+            root="data/mnist/", train=False, transform=transforms.ToTensor()
         )
 
         self.loss_func = nn.CrossEntropyLoss()
