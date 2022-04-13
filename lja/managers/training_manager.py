@@ -144,14 +144,14 @@ class TrainingManager(Manager):
 
 
 class LogicalNetworkTrainingManager(TrainingManager):
-    def __init__(self, training=True):
+    def __init__(self):
         super(LogicalNetworkTrainingManager, self).__init__()
         # FIXME probably turn the below if statements into whole different classes
         self.type_of_network = "logical"
-        if training:
-            self.results_path = os.path.join(
-                self.cfg.networks.general.training_results_dir, self.type_of_network
-            )
+        self.results_path = os.path.join(
+            self.cfg.networks.general.training_results_dir, self.type_of_network
+        )
+        if self.cfg.networks.logical.training:
             (
                 self.session_name,
                 self.results_path_session,
