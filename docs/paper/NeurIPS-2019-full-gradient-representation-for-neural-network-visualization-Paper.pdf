@@ -12822,3 +12822,142 @@ trailer
 startxref
 1724387
 %%EOF
+2 0 obj
+<< /Editors (şÿ\000H\000.\000 \000W\000a\000l\000l\000a\000c\000h\000 \000a\000n\000d\000 \000H\000.\000 \000L\000a\000r\000o\000c\000h\000e\000l\000l\000e\000 \000a\000n\000d\000 \000A\000.\000 \000B\000e\000y\000g\000e\000l\000z\000i\000m\000e\000r\000 \000a\000n\000d\000 \000F\000.\000 \000d\000'\000A\000l\000c\000h\000é\000-\000B\000u\000c\000 \000a\000n\000d\000 \000E\000.\000 \000F\000o\000x\000 \000a\000n\000d\000 \000R\000.\000 \000G\000a\000r\000n\000e\000t\000t)
+/Date (2019) /Book (Advances in Neural Information Processing Systems 32)
+/Language (en-US) /Description (Paper accepted and presented at the Neural Information Processing Systems Conference \(http://nips.cc/\))
+/Created (2019) /Title (Full-Gradient Representation for Neural Network Visualization)
+/Type (Conference Proceedings) /Publisher (Curran Associates, Inc.) /EventType
+(Poster) /Subject (Neural Information Processing Systems http://nips.cc/)
+/Description-Abstract (We introduce a new tool for interpreting neural nets, namely full-gradients, which decomposes the neural net response into input sensitivity and per-neuron sensitivity components. This is the first proposed representation which satisfies two key properties: completeness and weak dependence, which provably cannot be satisfied by any saliency map-based interpretability method. Using full-gradients, we also propose an approximate saliency map representation for convolutional nets dubbed FullGrad, obtained by aggregating the full-gradient components.\012\012We experimentally evaluate the usefulness of FullGrad in explaining model behaviour with two quantitative tests: pixel perturbation and remove-and-retrain. Our experiments reveal that our method explains model behavior correctly, and more comprehensively than other methods in the literature. Visual inspection also reveals that our saliency maps are sharper and more tightly confined to object regions than other methods.)
+/lastpage (4133) /ModDate (D:20220413181852Z00'00') /Published (2019) /Author
+(şÿ\000S\000u\000r\000a\000j\000 \000S\000r\000i\000n\000i\000v\000a\000s\000,\000 \000F\000r\000a\000n\000ç\000o\000i\000s\000 \000F\000l\000e\000u\000r\000e\000t)
+/Producer (macOS Version 12.1 \(Build 21C52\) Quartz PDFContext, AppendMode 1.1)
+/firstpage (4124) >>
+endobj
+4 0 obj
+<< /Annots [ 57 0 R 58 0 R 59 0 R 60 0 R 61 0 R 62 0 R 63 0 R 64 0 R 65 0 R
+66 0 R 67 0 R ] /Type /Page /MediaBox [ 0 0 612 792 ] /Parent 1 0 R /Resources
+15 0 R /Rotate 0 /Contents 14 0 R >>
+endobj
+5 0 obj
+<< /Annots [ 94 0 R 95 0 R 96 0 R 97 0 R 98 0 R 99 0 R 100 0 R 101 0 R 102 0 R
+103 0 R 104 0 R 105 0 R 106 0 R 107 0 R 108 0 R 109 0 R 110 0 R 111 0 R 112 0 R
+113 0 R 114 0 R 115 0 R 116 0 R 117 0 R 118 0 R 119 0 R ] /Type /Page /MediaBox
+[ 0 0 612 792 ] /Parent 1 0 R /Resources 69 0 R /Rotate 0 /Contents 68 0 R
+>>
+endobj
+6 0 obj
+<< /Annots [ 150 0 R 151 0 R 152 0 R 153 0 R 154 0 R 155 0 R 156 0 R 157 0 R
+158 0 R 159 0 R 160 0 R 161 0 R ] /Type /Page /MediaBox [ 0 0 612 792 ] /Parent
+1 0 R /Resources 121 0 R /Rotate 0 /Contents 120 0 R >>
+endobj
+7 0 obj
+<< /Annots [ 164 0 R 165 0 R 166 0 R 167 0 R 372 0 R 385 0 R 398 0 R ] /Type
+/Page /MediaBox [ 0 0 612 792 ] /Parent 1 0 R /Resources 163 0 R /Rotate 0
+/Contents 162 0 R >>
+endobj
+8 0 obj
+<< /Annots [ 176 0 R 177 0 R 178 0 R 179 0 R 180 0 R 181 0 R 182 0 R 183 0 R
+184 0 R 185 0 R ] /Type /Page /MediaBox [ 0 0 612 792 ] /Parent 1 0 R /Resources
+169 0 R /Rotate 0 /Contents 168 0 R >>
+endobj
+9 0 obj
+<< /Annots [ 188 0 R 189 0 R 190 0 R 191 0 R 192 0 R 193 0 R 194 0 R ] /Type
+/Page /MediaBox [ 0 0 612 792 ] /Parent 1 0 R /Resources 187 0 R /Rotate 0
+/Contents 186 0 R >>
+endobj
+10 0 obj
+<< /Annots [ 296 0 R 297 0 R 298 0 R 299 0 R 300 0 R 301 0 R 302 0 R 303 0 R
+304 0 R 305 0 R 306 0 R 307 0 R ] /Type /Page /MediaBox [ 0 0 612 792 ] /Parent
+1 0 R /Resources 196 0 R /Rotate 0 /Contents 195 0 R >>
+endobj
+11 0 obj
+<< /Annots [ 350 0 R 351 0 R 352 0 R 353 0 R 354 0 R 355 0 R 356 0 R 357 0 R
+358 0 R 359 0 R 360 0 R 361 0 R 362 0 R ] /Type /Page /MediaBox [ 0 0 612
+792 ] /Parent 1 0 R /Resources 309 0 R /Rotate 0 /Contents 308 0 R /Group
+349 0 R >>
+endobj
+12 0 obj
+<< /Annots [ 365 0 R 366 0 R 367 0 R 368 0 R ] /Type /Page /MediaBox [ 0 0
+612 792 ] /Parent 1 0 R /Resources 364 0 R /Rotate 0 /Contents 363 0 R >>
+endobj
+13 0 obj
+<< /Resources 370 0 R /Type /Page /Rotate 0 /Parent 1 0 R /MediaBox [ 0 0
+612 792 ] /Contents 369 0 R >>
+endobj
+397 0 obj
+[ 164 0 R 165 0 R 166 0 R 167 0 R 372 0 R 385 0 R 398 0 R ]
+endobj
+398 0 obj
+<< /T (Frederic Becker) /AP << /N 399 0 R >> /Rect [ 108 244.1631 503.954
+267.5908 ] /M (D:20220413181825Z00'00') /C [ 0.980392 0.803922 0.352941 ]
+/DA (//Helvetica 12 Tf 0 g) /F 4 /Type /Annot /Border [ 0 0 0 ] /QuadPoints
+[ 266.0694 267.5908 503.9539 267.5908 266.0694 255.0721 503.9539 255.0721
+214.763 259.3238 223.6806 259.3238 214.763 253.1311 223.6806 253.1311 108
+253.924 155.1408 253.924 108 244.1631 155.1408 244.1631 ] /Subtype /Highlight
+>>
+endobj
+399 0 obj
+<< /Type /XObject /Length 366 /FormType 1 /Resources 400 0 R /Subtype /Form
+/Filter /FlateDecode /BBox [ 0 0 395.954 23.42773 ] >> stream
+xe’1İ0D{Ÿ‚'à’EQuŠÔ[å F6ÍO€ïdşfE9\Øx¦†Ãßé•ŞIğ´Ùyv'kì6F£ßßéı¢—/—Òy‘ğLiÓğññ~~´nÓ•®“^¾^zü¸H{²ÄtÒÁÙı¼±É1Ldr352c=ƒ4„ûhZä8áVºÜª`ÎCl×•o]âkåàCéïlêáa[Fa $ÇnVäÜ¦;Ûúb·ñ–úÿ!œôF*Á#á „·q ™…7±‰`dpKC‘swu#T´o_øëVÕÓ—vÈ*‚¯“ ‘‰R/òiZ«
+÷j=í(¥É=‡aª_œ[¾ŠÁÃr¿ØQ~Š£äßààËçœ)Šm
+Îf¾X¹2q_É#=£Š5Å.ï¬™á›=È÷êãÆé’­ä"ÕZ«ÊxZZæVÚnªa!ìX9+HÛ›
+•ömğg¯ 9[´
+endstream
+endobj
+400 0 obj
+<< /ColorSpace << /Cs1 401 0 R >> /ExtGState << /Gs1 403 0 R >> /ProcSet [
+/PDF ] >>
+endobj
+401 0 obj
+[ /ICCBased 402 0 R ]
+endobj
+402 0 obj
+<< /Alternate /DeviceRGB /N 3 /Length 2612 /Filter /FlateDecode >> stream
+x–wTSÙ‡Ï½7½Ğ" %ôz	 Ò;HQ‰I€P†„&vDF)VdTÀG‡"cEƒ‚b×	òPÆÁQDEåİŒk	ï­5óŞšıÇYßÙç·×Ùgï}×º Pü‚ÂtX€4¡XîëÁ\ËÄ÷XÀáffGøDÔü½=™™¨HÆ³öî.€d»Û,¿P&sÖÿ‘"7C$ 
+EÕ6<~&å”S³Å2ÿÊô•)2†12¡	¢¬"ãÄ¯lö§æ+»É˜—&ä¡YÎ¼4Œ»PŞš%á£Œ¡\˜%àg£|e½TIš å÷(ÓÓøœL 0™_Ìç&¡l‰2Eî‰ò ”Ä9¼r‹ù9h x¦gäŠ‰Ib¦×˜iåèÈfúñ³Sùb1+”ÃMáˆxLÏô´0€¯o–E%Ym™h‘í­ííYÖæhù¿Ùß~Sı=ÈzûUñ&ìÏAŒYßlì¬/½ ö$Z›³¾•U ´m@åá¬Oï  ò ´Şœó†l^’Äâ'‹ììlsŸk.+è7ûŸ‚oÊ¿†9÷™ËîûV;¦?#I3eEå¦§¦KDÌÌ—Ïdı÷ÿãÀ9iÍÉÃ,œŸÀñ…èUQè”	„‰h»…<X.d
+„Õá6'~khu_ }…9P¸IÈo= C#$n?z}ë[1
+È¾¼h­‘¯s2zşçú\ŠnáLA"Sæödr%¢,£ß„lÁt 
+4.0,`€3pŞ  „€H–.Hi@²A>Ø 
+A1Øvƒjp ÔzĞN‚6p\WÀp€G@
+†ÁK0Şi‚ğ¢Aª¤™BÖZyCAP8ÅC‰’@ùĞ&¨*ƒª¡CP=ô#tº]ƒú Ğ 4ı}„˜ÓaØ ¶€Ù°;GÂËàDxœÀÛáJ¸>·Âáğ ,…_Â“@ÈÑFXñDBX$!k‘"¤©Eš¤¹H‘qä‡¡a˜Æã‡YŒábVaÖbJ0Õ˜c˜VLæ6f3ù‚¥bÕ±¦X'¬?v	6›-ÄV``[°—±Øaì;ÇÀâp~¸\2n5®·×Œ»€ëÃá&ñx¼*Şï‚Ásğb|!¾
+ßÆ¿'	Zk‚!– $l$Tçı„Â4Q¨Ot"†yÄ\b)±ØA¼I&N“I†$R$)™´TIj"]&=&½!“É:dGrY@^O®$Ÿ _%’?P”(&OJEBÙN9J¹@y@yC¥R¨nÔXª˜ºZO½D}J}/G“3—ó—ãÉ­“«‘k•ë—{%O”×—w—_.Ÿ'_!Jş¦ü¸QÁ@ÁS£°V¡Fá´Â=…IEš¢•bˆbšb‰bƒâ5ÅQ%¼’’·O©@é°Ò%¥!BÓ¥yÒ¸´M´:ÚeÚ0G7¤ûÓ“éÅôè½ô	e%e[å(ååå³ÊRÂ0`ø3R¥Œ“Œ»Œó4æ¹ÏãÏÛ6¯i^ÿ¼)•ù*n*|•"•f••ªLUoÕÕªmªOÔ0j&jajÙjûÕ.«Ï§ÏwÏ_4ÿäü‡ê°º‰z¸újõÃê=ê“š¾U—4Æ5šnšÉšåšç4Ç´hZµZåZçµ^0•™îÌTf%³‹9¡­®í§-Ñ>¤İ«=­c¨³Xg£N³Î]’.[7A·\·SwBOK/X/_¯Qï¡>QŸ­Ÿ¤¿G¿[ÊÀĞ Ú`‹A›Á¨¡Š¡¿aa£ác#ª‘«Ñ*£Z£;Æ8c¶qŠñ>ã[&°‰I’IÉMSØÔŞT`ºÏ´Ïkæh&4«5»Ç¢°ÜYY¬FÖ 9Ã<È|£y›ù+=‹X‹İ_,í,S-ë,Y)YXm´ê°úÃÚÄšk]c}Ç†jãc³Î¦İæµ­©-ßv¿í};š]°İ»N»Ïöö"û&û1=‡x‡½÷Øtv(»„}Õëèá¸ÎñŒã'{'±ÓI§ßYÎ)ÎÎ£ğÔ-rÑqá¸r‘.d.Œ_xp¡ÔUÛ•ãZëúÌM×çvÄmÄİØ=Ùı¸û+K‘G‹Ç”§“çÏ^ˆ—¯W‘W¯·’÷bïjï§>:>‰>>¾v¾«}/øaııvúİó×ğçú×ûO8¬	è
+¤FV>2	uÃÁÁ»‚/Ò_$\ÔBüCv…<	5]ús.,4¬&ìy¸Ux~xw-bEDCÄ»HÈÒÈG‹KwFÉGÅEÕGME{E—EK—X,Y³äFŒZŒ ¦={$vr©÷ÒİK‡ãìâ
+ãî.3\–³ìÚrµå©ËÏ®_ÁYq*ßÿ‰Â©åL®ô_¹wå×“»‡û’çÆ+çñ]øeü‘—„²„ÑD—Ä]‰cI®IIãOAµàu²_òä©””£)3©Ñ©Íi„´ø´ÓB%aŠ°+]3='½/Ã4£0CºÊiÕîU¢@Ñ‘L(sYf»˜şLõHŒ$›%ƒY³j²ŞgGeŸÊQÌæôäšänËÉóÉû~5f5wug¾vş†üÁ5îk­…Ö®\Û¹Nw]Áºáõ¾ëm mHÙğËFËeßnŠŞÔQ Q°¾`h³ïæÆB¹BQá½-Î[lÅllíİf³­jÛ—"^ÑõbËâŠâO%Ü’ëßY}WùİÌö„í½¥ö¥ûwàvwÜİéºóX™bY^ÙĞ®à]­åÌò¢ò·»Wì¾Va[q`id´2¨²½J¯jGÕ§ê¤êšæ½ê{·íÚÇÛ×¿ßmÓÅ>¼È÷Pk­AmÅaÜá¬ÃÏë¢êº¿g_DíHñ‘ÏG…G¥ÇÂuÕ;Ô×7¨7”6Â’Æ±ãqÇoıàõC{«éP3£¹ø8!9ñâÇøï<ÙyŠ}ªé'ıŸö¶ĞZŠZ¡ÖÜÖ‰¶¤6i{L{ßé€ÓÎ-?›ÿ|ôŒö™š³ÊgKÏ‘Îœ›9Ÿw~òBÆ…ñ‹‰‡:Wt>º´äÒ®°®ŞË—¯^ñ¹r©Û½ûüU—«g®9];}}½í†ıÖ»–_ì~iéµïm½ép³ı–ã­¾}çú]û/Şöº}åÿ‹úî.¾{ÿ^Ü=é}ŞıÑ©^?Ìz8ıhıcìã¢'
+O*ª?­ıÕø×f©½ôì ×`Ï³ˆg†¸C/ÿ•ù¯OÃÏ©Ï+F´FêG­GÏŒùŒİz±ôÅğËŒ—Óã…¿)ş¶÷•Ñ«Ÿ~wû½gbÉÄğkÑë™?JŞ¨¾9úÖömçdèäÓwiï¦§ŠŞ«¾?öı¡ûcôÇ‘éìOøO•Ÿ?w|	üòx&mfæß÷„óû
+endstream
+endobj
+403 0 obj
+<< /BM /Multiply /Type /ExtGState >>
+endobj
+xref
+0 1
+0000000000 65535 f 
+2 1
+0001725043 00000 n 
+4 10
+0001727339 00000 n 
+0001727546 00000 n 
+0001727878 00000 n 
+0001728106 00000 n 
+0001728294 00000 n 
+0001728506 00000 n 
+0001728694 00000 n 
+0001728923 00000 n 
+0001729175 00000 n 
+0001729340 00000 n 
+397 7
+0001729461 00000 n 
+0001729538 00000 n 
+0001730008 00000 n 
+0001730540 00000 n 
+0001730642 00000 n 
+0001730681 00000 n 
+0001733395 00000 n 
+trailer
+<< /ID [<><2C83522125B73452BB63BBE4116D68E3> ] /Root 3 0 R /Size 404 /Prev 1724387 /Info 2 0 R >> 
+startxref
+1733449
+%%EOF
