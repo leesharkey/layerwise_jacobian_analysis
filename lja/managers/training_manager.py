@@ -12,8 +12,9 @@ from datetime import datetime
 
 
 class TrainingManager(Manager):
-    def __init__(self):
+    def __init__(self, enable_training=False):
         super(TrainingManager, self).__init__()
+        self.enable_training = enable_training
         self.level_of_network = None
         self.type_of_network = None
         self.results_path = None
@@ -61,12 +62,15 @@ class TrainingManager(Manager):
         return optimizer
 
     def set_up_results_path_session(self):
-        # Create session name and directories e.g.
-        session_name = datetime.now().strftime("%Y%m%d_%H%M%S")
-        results_path_session = os.path.join(self.results_path, session_name)
-        if not (os.path.exists(results_path_session)):
-            os.makedirs(results_path_session)
-        return session_name, results_path_session
+        if self.enable_training:
+            # Create session name and directories e.g.
+            session_name = datetime.now().strftime("%Y%m%d_%H%M%S")
+            results_path_session = os.path.join(self.results_path, session_name)
+            if not (os.path.exists(results_path_session)):
+                os.makedirs(results_path_session)
+            return session_name, results_path_session
+        else:
+            return None, None
 
     def load_model_checkpoint(self, checkpoint_path=None, net=None, optimizer=None):
         if checkpoint_path is not None:
@@ -144,31 +148,37 @@ class TrainingManager(Manager):
 
 
 class LogicalNetworkTrainingManager(TrainingManager):
-    def __init__(self):
-        super(LogicalNetworkTrainingManager, self).__init__()
+    def __init__(self, problem, enable_training=False):
+        super(LogicalNetworkTrainingManager, self).__init__(enable_training)
         # FIXME probably turn the below if statements into whole different classes
+
+        # either xor or stacked xor
+        self.problem = problem
+        if self.problem == "xor":
+            self.config = self.cfg.networks.logical.xor
+        elif self.problem == "stacked_xor":
+            self.config = self.cfg.networks.logical.stacked_xor
+        else:
+            raise Exception("LogicalNetworkTrainingManager: Problem not defined")
+
         self.type_of_network = "logical"
         self.results_path = os.path.join(
             self.cfg.networks.general.training_results_dir, self.type_of_network
         )
-        if self.cfg.networks.logical.training:
-            (
-                self.session_name,
-                self.results_path_session,
-            ) = self.set_up_results_path_session()
+        (
+            self.session_name,
+            self.results_path_session,
+        ) = self.set_up_results_path_session()
 
-        self.num_epochs = self.cfg.networks.logical.num_epochs
-        self.batch_size = self.cfg.networks.logical.batch_size
-        self.problem = self.cfg.networks.logical.problem
+        self.num_epochs = self.config.num_epochs
+        self.batch_size = self.config.batch_size
+        self.problem = self.config.problem
 
         self.net = NLayerPerceptron(
-            sizes=self.cfg.networks.logical.sizes,
-            last_act=nn.Sigmoid,
-            device=self.device,
+            sizes=self.config.sizes, last_act=nn.Sigmoid, device=self.device,
         )
 
         self.train_dataset = LogicalDataGenerator(size=10000, problem=self.problem)
-
         self.test_dataset = LogicalDataGenerator(size=256, problem=self.problem)
 
         self.loss_func = nn.BCEWithLogitsLoss()
@@ -179,8 +189,8 @@ class LogicalNetworkTrainingManager(TrainingManager):
         self.optimizer = self.set_up_optimizer()
         self.train_loader, self.test_loader = self.set_up_data_loaders()
 
-        if self.cfg.networks.logical.load_model_name is not None:
-            model_name = self.cfg.networks.logical.load_model_name
+        if not self.enable_training:
+            model_name = self.config.load_model_name
             load_checkpoint_path = os.path.join(self.results_path, model_name)
             self.load_model_checkpoint(load_checkpoint_path, self.net, self.optimizer)
 
@@ -195,8 +205,8 @@ class LogicalNetworkTrainingManager(TrainingManager):
 
 
 class MnistNetworkTrainingManager(TrainingManager):
-    def __init__(self):
-        super(MnistNetworkTrainingManager, self).__init__()
+    def __init__(self, enable_training):
+        super(MnistNetworkTrainingManager, self).__init__(enable_training)
         # FIXME probably turn the below if statements into whole different classes
         self.type_of_network = "mnist"
         self.results_path = os.path.join(
@@ -233,7 +243,7 @@ class MnistNetworkTrainingManager(TrainingManager):
         self.optimizer = self.set_up_optimizer()
         self.train_loader, self.test_loader = self.set_up_data_loaders()
 
-        if self.cfg.networks.mnist.load_model_name is not None:
+        if not self.enable_training:
             model_name = self.cfg.networks.mnist.load_model_name
             load_checkpoint_path = os.path.join(self.results_path, model_name)
             self.load_model_checkpoint(load_checkpoint_path, self.net)
