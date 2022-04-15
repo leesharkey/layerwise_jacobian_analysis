@@ -59,3 +59,6 @@ class NLayerPerceptron(nn.Module):
         else:
             NotImplementedError("Inappropriate layer key.")
         return layer, act
+
+    def get_depth(self):
+        return len(self.nets)
