@@ -1,12 +1,14 @@
 import torch
 import torch.utils.data as data
 
+
 class LogicalDataGenerator(data.Dataset):
     """
     Yoinked from https://uvadlc-notebooks.readthedocs.io/en/latest/tutorial_notebooks/tutorial2/Introduction_to_PyTorch.html#Learning-by-example:-Continuous-XOR
     then modified.
     """
-    def __init__(self, size, std=0.1):
+
+    def __init__(self, size, problem="stacked_xor", std=0.1):
         """
         Inputs:
             size - Number of data points we want to generate
@@ -15,8 +17,16 @@ class LogicalDataGenerator(data.Dataset):
         super().__init__()
         self.size = size
         self.std = std
-        self.logical_circuit = self.stacked_xor
-        data, label = self.generate_stacked_xor()
+
+        if problem == "xor":
+            self.logical_circuit = self.xor
+            data, label = self.generate_xor()
+        elif problem == "stacked_xor":
+            self.logical_circuit = self.stacked_xor
+            data, label = self.generate_stacked_xor()
+        else:
+            raise Exception("LogicalDataGenerator: invalid problem")
+
         self.data = data
         self.label = label
 
@@ -25,8 +35,8 @@ class LogicalDataGenerator(data.Dataset):
         return inp.sum(dim=1) == 1
 
     def stacked_xor(self, inp):
-        xor1 = self.xor(inp[:,0:2])
-        xor2 = self.xor(inp[:,2:])
+        xor1 = self.xor(inp[:, 0:2])
+        xor2 = self.xor(inp[:, 2:])
         inp = torch.stack([xor1, xor2], dim=-1)
         assert inp.shape[1] == 2
         return self.xor(inp)
@@ -34,6 +44,11 @@ class LogicalDataGenerator(data.Dataset):
     def generate_stacked_xor(self):
         data = torch.randint(low=0, high=2, size=(self.size, 4), dtype=torch.float32)
         label = (self.stacked_xor(data.int())).to(torch.long)
+        return data, label
+
+    def generate_xor(self):
+        data = torch.randint(low=0, high=2, size=(self.size, 2), dtype=torch.float32)
+        label = (self.xor(data.int())).to(torch.long)
         return data, label
 
     def generate_stacked_continuous_xor(self):

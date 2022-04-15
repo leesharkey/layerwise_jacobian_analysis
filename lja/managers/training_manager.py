@@ -159,6 +159,7 @@ class LogicalNetworkTrainingManager(TrainingManager):
 
         self.num_epochs = self.cfg.networks.logical.num_epochs
         self.batch_size = self.cfg.networks.logical.batch_size
+        self.problem = self.cfg.networks.logical.problem
 
         self.net = NLayerPerceptron(
             sizes=self.cfg.networks.logical.sizes,
@@ -166,9 +167,9 @@ class LogicalNetworkTrainingManager(TrainingManager):
             device=self.device,
         )
 
-        self.train_dataset = LogicalDataGenerator(size=10000)
+        self.train_dataset = LogicalDataGenerator(size=10000, problem=self.problem)
 
-        self.test_dataset = LogicalDataGenerator(size=256)
+        self.test_dataset = LogicalDataGenerator(size=256, problem=self.problem)
 
         self.loss_func = nn.BCEWithLogitsLoss()
         self.lr = self.cfg.networks.general.lr

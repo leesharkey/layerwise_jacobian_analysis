@@ -15,10 +15,11 @@ defaults:
             training_results_dir: results/network_training/
         logical:
             training: false
-            load_model_name: final_logical # null
+            load_model_name: final_logical_xor # null
+            problem: xor # stacked_xor
             num_epochs: 100
             batch_size: 16
-            sizes: [ 4, 128, 64, 1 ]
+            sizes: [ 2, 3, 1] # [ 4, 128, 64, 1 ]
         mnist:
             load_model_name: null
             num_epochs: 1000
