@@ -18,10 +18,10 @@ class LTExtractor:
         path = self.results_path + end_path
         print("Store LT in:", path)
 
-        for i, (activation, transformation) in enumerate(
-            zip(self.activations, self.linear_transformations)
-        ):
+        for i, activation in enumerate(self.activations):
             np.save(path + "activation_" + str(i) + ".npy", activation.detach().numpy())
+
+        for i, transformation in enumerate(self.linear_transformations):
             np.save(
                 path + "transformation_" + str(i) + ".npy",
                 transformation.detach().numpy(),
