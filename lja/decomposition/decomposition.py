@@ -27,7 +27,7 @@ class Decomposition:
 
     def store(self):
         path = "results/decompositions/" + self.path + self.side + "/"
-        print("Store in: ", path)
+        print("\nStore in: ", path)
         for i, decomposition in enumerate(self.decompositions):
             newpath = path + "Layer" + str(i) + "/"
 
@@ -39,20 +39,78 @@ class Decomposition:
     def decompose(self, k, side="left"):
         self.decompositions = []
         self.side = side
-        for T in self.transformations:
+        for i, T in enumerate(self.transformations):
+            print("\nLayer:", i)
             u, s, vh = self.get_decomposition(T, k, self.side)
             self.decompositions.append((u, s, vh))
+            self.test_decomposition(
+                u, s, vh, self.activations[i], self.activations[i + 1], k
+            )
+
+        return self
+
+    def test_decomposition(self, u, s, vh, x, xp1, k):
+
+        print(
+            "Stacked side:\t",
+            self.side,
+            "\nK:\t\t",
+            k,
+            "\nSize of u:\t",
+            u.shape,
+            "\nSize of s\t",
+            s.shape,
+            "\nSize of vh\t",
+            vh.shape,
+        )
+
+        if self.side == "left":
+            U = u
+
+            # 1. What is read:
+            x_ext = np.insert(x, x.shape[1], 1, axis=1)
+            read_in = vh @ x_ext.T
+
+            # 2. Scale
+            read_in_scaled = np.diag(s) @ read_in
+
+            # 3. Write to ouput
+            t = U @ read_in_scaled
+            xp1_hat = t[range(t.shape[0]), :, range(t.shape[0])]
+            acc = np.sum(np.isclose(xp1_hat, xp1, atol=1e-04)) / xp1_hat.size
+
+            print("Reconstruction accuracy:", acc)
+
+        elif self.side == "right":
+            VH = vh
+
+            # 1. What is read:
+            x_ext = np.insert(x, x.shape[1], 1, axis=1)
+            read_ins = VH @ x_ext.T
+
+            # pick first column of first read_in and so on
+            read_in = np.transpose(
+                read_ins[range(read_ins.shape[0]), :, range(read_ins.shape[0])]
+            )
+
+            # 2. Scale
+            read_in_scaled = np.diag(s) @ read_in
+
+            # 3. Write to output
+            xp1_hat = np.transpose(u @ read_in_scaled)
+            acc = np.sum(np.isclose(xp1_hat, xp1, atol=1e-04)) / xp1_hat.size
+
+            print("Reconstruction accuracy:", acc)
 
     def get_decomposition(self, T, k, side):
 
         if side == "left":
-            # 1. stack tranformations of each input
+            # 1. stack transformations of each input
             T_stacked = np.vstack(T)
 
             # 2. Apply SVD
             k = min(k, T.shape[2])
             u_stacked, s, vh = extmath.randomized_svd(T_stacked, k, random_state=1)
-            print(u_stacked.shape, s.shape, vh.shape)
 
             # 3. Recover single U Matices
             U = u_stacked.reshape(T.shape[0], T.shape[1], k)
@@ -60,17 +118,16 @@ class Decomposition:
             return U, s, vh
 
         elif side == "right":
-            # 1. stack tranformations of each input
+            # 1. stack transformations of each input
             T_stacked = np.hstack(T)
-            print(T_stacked.shape)
 
             # 2. Apply SVD
             k = min(k, T.shape[1])
             u, s, vh_stacked = extmath.randomized_svd(T_stacked, k, random_state=1)
-            print(u.shape, s.shape, vh_stacked.shape)
 
             # 3. Recover single VH Matices
-            VH = vh_stacked.reshape(T.shape[0], k, T.shape[2])
+            vh_stacked = vh_stacked.reshape(k, T.shape[0], T.shape[2])
+            VH = np.hstack(vh_stacked).reshape(T.shape[0], k, T.shape[2])
 
             return u, s, VH
 
