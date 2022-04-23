@@ -2,7 +2,7 @@ from lja.analyser.analyser import Analyser
 
 analyser = Analyser("logical/xor/")
 
-analyser.load_data("right", 1)
+analyser.load_data(side="right", layer=1)
 analyser.analyse_decomposition()
 
 analyser.activation_plots()
