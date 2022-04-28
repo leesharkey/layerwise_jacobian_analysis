@@ -205,8 +205,18 @@ class LogicalNetworkTrainingManager(TrainingManager):
 
 
 class MnistNetworkTrainingManager(TrainingManager):
-    def __init__(self, enable_training):
+    def __init__(self, model_type, enable_training):
         super(MnistNetworkTrainingManager, self).__init__(enable_training)
+
+        # either dropout or no_dropoput
+        self.model_type = model_type
+        if self.model_type == "no_dropout":
+            self.config = self.cfg.networks.mnist.no_dropout
+        elif self.model_type == "dropout":
+            self.config = self.cfg.networks.mnist.dropout
+        else:
+            raise Exception("MnistNetworkTrainingManager: Problem not defined")
+
         # FIXME probably turn the below if statements into whole different classes
         self.type_of_network = "mnist"
         self.results_path = os.path.join(
@@ -217,12 +227,16 @@ class MnistNetworkTrainingManager(TrainingManager):
             self.results_path_session,
         ) = self.set_up_results_path_session()
 
-        self.num_epochs = self.cfg.networks.mnist.num_epochs
-        self.batch_size = self.cfg.networks.mnist.batch_size
+        self.num_epochs = self.config.num_epochs
+        self.batch_size = self.config.batch_size
 
         self.net = NLayerPerceptron(
-            sizes=self.cfg.networks.mnist.sizes, last_act=nn.Softmax
+            sizes=self.config.sizes,
+            last_act=nn.Softmax,
+            device=self.device,
+            dropout=self.config.dropout,
         )
+        print(self.net)
 
         self.train_dataset = torchvision.datasets.MNIST(
             root="data/mnist/",
@@ -244,7 +258,7 @@ class MnistNetworkTrainingManager(TrainingManager):
         self.train_loader, self.test_loader = self.set_up_data_loaders()
 
         if not self.enable_training:
-            model_name = self.cfg.networks.mnist.load_model_name
+            model_name = self.config.load_model_name
             load_checkpoint_path = os.path.join(self.results_path, model_name)
             self.load_model_checkpoint(load_checkpoint_path, self.net)
 

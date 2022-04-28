@@ -27,7 +27,15 @@ defaults:
                 batch_size: 16
                 sizes: [ 4, 128, 64, 1 ]
         mnist:
-            load_model_name: null
-            num_epochs: 1000
-            batch_size: 32
-            sizes: [ 784, 1024, 1024, 512, 10 ] # Alternatively, Schmidhuber former SoTA: [ 784, 2500, 2000, 1500, 1000, 500, 10 ]
+            no_dropout:
+              load_model_name: null
+              num_epochs: 1000
+              batch_size: 32
+              dropout: False
+              sizes: [ 784, 1024, 1024, 512, 10 ] # Alternatively, Schmidhuber former SoTA: [ 784, 2500, 2000, 1500, 1000, 500, 10 ]
+            dropout:
+              load_model_name: null
+              num_epochs: 1000
+              batch_size: 32
+              dropout: True
+              sizes: [ 784, 1024, 1024, 512, 10 ] # Alternatively, Schmidhuber former SoTA: [ 784, 2500, 2000, 1500, 1000, 500, 10 ]

@@ -5,23 +5,31 @@ import torch.nn as nn
 class NLayerPerceptron(nn.Module):
     """An N layer perceptron with a linear output."""
 
-    def __init__(self, sizes=None, last_act=nn.Softmax, device=torch.device("cuda")):
+    def __init__(
+        self,
+        sizes=None,
+        last_act=nn.Softmax,
+        device=torch.device("cuda"),
+        dropout=False,
+    ):
         super(NLayerPerceptron, self).__init__()
         self.nets = nn.ModuleList([])
         self.act = nn.ReLU(inplace=True)
         self.device = device
+        self.dropout = dropout
+        self.dropout_net = nn.Dropout(p=0.5, inplace=False)
 
         if last_act is not None:
             self.last_act = last_act()
         else:
             self.last_act = None
         self.num_layers = len(sizes) - 1
+
         for i in range(self.num_layers):
             net = nn.Linear(in_features=sizes[i], out_features=sizes[i + 1]).to(
                 self.device
             )
             self.nets.append(net)
-            # TODO add dropout option
 
     def forward(self, x, return_all_activations=False):
         outs = []
@@ -29,6 +37,8 @@ class NLayerPerceptron(nn.Module):
             x = net(x)
 
             if layer_idx < self.num_layers - 1:  # No act on last layer
+                if self.dropout:
+                    x = self.dropout_net(x)
                 x = self.act(x)
             elif layer_idx == self.num_layers - 1:
                 if self.last_act is not None:
