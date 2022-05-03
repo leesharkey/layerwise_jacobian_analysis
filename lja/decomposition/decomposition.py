@@ -36,16 +36,18 @@ class Decomposition:
             for item, name in zip(decomposition, ["u", "s", "vh"]):
                 np.save(newpath + name + ".npy", item)
 
-    def decompose(self, k, side="left"):
+    def decompose(self, k_given, side="left"):
         self.decompositions = []
         self.side = side
+        print(len(self.transformations))
         for i, T in enumerate(self.transformations):
-            print("\nLayer:", i)
-            u, s, vh = self.get_decomposition(T, k, self.side)
-            self.decompositions.append((u, s, vh))
-            self.test_decomposition(
-                u, s, vh, self.activations[i], self.activations[i + 1], k
-            )
+            if i != len(self.transformations) - 1:
+                print("\nLayer:", i)
+                u, s, vh, k = self.get_decomposition(T, k_given, self.side)
+                self.decompositions.append((u, s, vh))
+                self.test_decomposition(
+                    u, s, vh, self.activations[i], self.activations[i + 1], k
+                )
 
         return self
 
@@ -109,13 +111,22 @@ class Decomposition:
             T_stacked = np.vstack(T)
 
             # 2. Apply SVD
-            k = min(k, T.shape[2])
+            if T_stacked.shape[0] < k:
+                k = T_stacked.shape[0]
+                print(
+                    "Warning: k reduced - k larger than stacked datapoints available -  increase n to avoid this"
+                )
+
+            elif T.shape[2] < k:
+                k = T.shape[2]
+                print("Warning: k reduced - k larger than available dimensions")
+
             u_stacked, s, vh = extmath.randomized_svd(T_stacked, k, random_state=1)
 
-            # 3. Recover single U Matices
+            # 3. Recover single U Matrices
             U = u_stacked.reshape(T.shape[0], T.shape[1], k)
 
-            return U, s, vh
+            return U, s, vh, k
 
         elif side == "right":
             # 1. stack transformations of each input
@@ -129,7 +140,7 @@ class Decomposition:
             vh_stacked = vh_stacked.reshape(k, T.shape[0], T.shape[2])
             VH = np.hstack(vh_stacked).reshape(T.shape[0], k, T.shape[2])
 
-            return u, s, VH
+            return u, s, VH, k
 
         else:
             raise Exception("Decomposition: invalid side")

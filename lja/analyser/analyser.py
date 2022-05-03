@@ -9,21 +9,24 @@ from scipy.spatial import distance_matrix
 class Analyser:
     """Creates an analysis object, that can provide different statistics about the decompositions."""
 
-    def __init__(self, path):
+    def __init__(self, path, show_plots=False):
         super(Analyser, self).__init__()
         self.path = path
         self.side = None
+        self.layer = None
         self.s = None
         self.u = None
         self.vh = None
         self.activation = None
         self.activation_p1 = None
         self.labels = None
+        self.plotter = Plotter(path, show_plots)
 
     def load_data(self, side, layer):
         # config
         self.side = side
         self.layer = layer
+        self.plotter.set_layer(layer)
 
         # Load decompositions
         path = (
@@ -50,17 +53,9 @@ class Analyser:
         self.activation_p1 = np.load(
             os.path.join(path, "activation_" + str(layer + 1) + ".npy")
         )
+        self.labels = np.load(os.path.join(path, "labels.npy"))
 
-        # Load labels
-        labels = np.load(
-            os.path.join(
-                path,
-                "activation_" + str(len(glob.glob(path + "activation_*")) - 1) + ".npy",
-            )
-        )
-        self.labels = np.round(labels)
-
-    def analyse_decomposition(self):
+    def analyse_decomposition(self, verbose=True):
         u = self.u
         vh = self.vh
         s = self.s
@@ -84,29 +79,34 @@ class Analyser:
             xp1_hat = t[range(t.shape[0]), :, range(t.shape[0])]
             acc = np.sum(np.isclose(xp1_hat, xp1, atol=1e-04)) / xp1_hat.size
 
-            np.set_printoptions(suppress=True)
-            print("\nAnalysis with left-stacked SV:")
-            print("The read vectors are (row-wise): \n", np.round(vh, 3))
-            print(
-                "\nThe read in vectors are \n(i-th row describes the representation in the i-th dimension, \nj-th column describes the representation of the j-th input):\n",
-                np.round(read_in, 3),
-            )
-            print("\nThe scaled read in vectors are:\n", np.round(read_in_scaled, 3))
-            print(
-                "\nThe reconstructed output is:\n(i-th row describes activation for i-th input\nj-th column descibribes the activation of j-th neuron)\n",
-                np.round(xp1_hat, 3),
-            )
-            print("\nReconstruction accuracy is: ", acc)
-            print(
-                "\nThe write vectors depend on the inputs. \n(the i-th row describes the output to the i-th neuron \nthe j-th column describes the j-th write vector)\n",
-                np.round(U, 3),
-            )
+            if verbose:
+                np.set_printoptions(suppress=True)
+                print("\nAnalysis with left-stacked SV:")
+                print("The read vectors are (row-wise): \n", np.round(vh, 3))
+                print(
+                    "\nThe read in vectors are \n(i-th row describes the representation in the i-th dimension, \nj-th column describes the representation of the j-th input):\n",
+                    np.round(read_in, 3),
+                )
+                print(
+                    "\nThe scaled read in vectors are:\n", np.round(read_in_scaled, 3)
+                )
+                print(
+                    "\nThe reconstructed output is:\n(i-th row describes activation for i-th input\nj-th column descibribes the activation of j-th neuron)\n",
+                    np.round(xp1_hat, 3),
+                )
 
-            print(
-                "\nThe euclidean distance matrix for the U matrices is:\n",
-                np.round(np.triu(distance_matrix(U_flatten, U_flatten)), 3),
-            )
-            print()
+                print("\nReconstruction accuracy is: ", acc)
+
+                print(
+                    "\nThe write vectors depend on the inputs. \n(the i-th row describes the output to the i-th neuron \nthe j-th column describes the j-th write vector)\n",
+                    np.round(U, 3),
+                )
+
+                print(
+                    "\nThe euclidean distance matrix for the U matrices is:\n",
+                    np.round(np.triu(distance_matrix(U_flatten, U_flatten)), 3),
+                )
+                print()
 
         elif self.side == "right":
             VH = vh
@@ -129,65 +129,88 @@ class Analyser:
             xp1_hat = np.transpose(u @ read_in_scaled)
             acc = np.sum(np.isclose(xp1_hat, xp1, atol=1e-04)) / xp1_hat.size
 
-            np.set_printoptions(suppress=True)
-            print("\nAnalysis with right-stacked SV:")
-            print(
-                "The read vectors depend on the inputs. The read vectors are (row-wise): \n",
-                np.round(VH, 3),
-            )
-            print(
-                "\nThe read in vectors are \n(i-th row describes the representation in the i-th dimension, \nj-th column describes the representation of the j-th input):\n",
-                np.round(read_in, 3),
-            )
-            print("\nThe scaled read in vectors are:\n", np.round(read_in_scaled, 3))
-            print(
-                "\nThe reconstructed output is:\n(i-th row describes activation for i-th input\nj-th column descibribes the activation of j-th neuron)\n",
-                np.round(xp1_hat, 3),
-            )
-            print("\nReconstruction accuracy is: ", acc)
-            print(
-                "\nThe write vectors are: \n(the i-th row describes the output to the i-th neuron \nthe j-th column describes the j-th write vector)\n",
-                np.round(u, 3),
-            )
+            if verbose:
+                np.set_printoptions(suppress=True)
+                print("\nAnalysis with right-stacked SV:")
+                print(
+                    "The read vectors depend on the inputs. The read vectors are (row-wise): \n",
+                    np.round(VH, 3),
+                )
+                print(
+                    "\nThe read in vectors are \n(i-th row describes the representation in the i-th dimension, \nj-th column describes the representation of the j-th input):\n",
+                    np.round(read_in, 3),
+                )
+                print(
+                    "\nThe scaled read in vectors are:\n", np.round(read_in_scaled, 3)
+                )
+                print(
+                    "\nThe reconstructed output is:\n(i-th row describes activation for i-th input\nj-th column descibribes the activation of j-th neuron)\n",
+                    np.round(xp1_hat, 3),
+                )
+                print("\nReconstruction accuracy is: ", acc)
+                print(
+                    "\nThe write vectors are: \n(the i-th row describes the output to the i-th neuron \nthe j-th column describes the j-th write vector)\n",
+                    np.round(u, 3),
+                )
 
-            print(
-                "\nThe euclidean distance matrix for the VH matrices is:\n",
-                np.round(np.triu(distance_matrix(VH_flatten, VH_flatten)), 3),
-            )
-            print()
+                print(
+                    "\nThe euclidean distance matrix for the VH matrices is:\n",
+                    np.round(np.triu(distance_matrix(VH_flatten, VH_flatten)), 3),
+                )
+                print()
 
     def stacked_matrix_plots(self):
-        plotter = Plotter()
 
         if self.side == "left":
             U = self.u
             U_flatten = U.reshape(U.shape[0], U.shape[1] * U.shape[2])
 
-            plotter.plot_reductions(
-                U_flatten, self.labels, self.activation, "U projections"
+            self.plotter.plot_reductions(
+                U_flatten,
+                self.labels,
+                self.activation,
+                title="U projections",
+                file_name="U_projections_",
             )
 
         elif self.side == "right":
             VH = self.vh
             VH_flatten = VH.reshape(VH.shape[0], VH.shape[1] * VH.shape[2])
 
-            plotter.plot_reductions(
-                VH_flatten, self.labels, self.activation, "VH projections"
+            self.plotter.plot_reductions(
+                VH_flatten,
+                self.labels,
+                self.activation,
+                title="VH projections",
+                file_name="VH_projections_",
             )
 
     def activation_plots(self):
-        plotter = Plotter()
-
-        plotter.plot_reductions(
-            self.activation, self.labels, self.activation, "Input projections"
+        self.plotter.plot_reductions(
+            self.activation,
+            self.labels,
+            self.activation,
+            title="Input projections",
+            file_name="activation_",
         )
 
     def read_in_scaled_plots(self):
-        plotter = Plotter()
-
-        plotter.plot_reductions(
+        self.analyse_decomposition(verbose=False)
+        self.plotter.plot_reductions(
             self.read_in_scaled.T,
             self.labels,
             self.activation,
-            "Scaled read in projections",
+            title="Scaled read in projections",
+            file_name="read_in_",
         )
+
+    def visualize_read_vectors(self, n=10):
+        vh = self.vh[0:n, :-1]
+        print(vh.shape)
+
+        for i in range(vh.shape[0]):
+            self.plotter.plot_image(
+                vh[i, :].reshape(28, 28),
+                title="Read vector" + str(i),
+                file_name="read_vector" + str(i) + "_",
+            )

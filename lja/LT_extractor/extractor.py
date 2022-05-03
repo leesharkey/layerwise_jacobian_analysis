@@ -6,13 +6,14 @@ from lja.LT_extractor.activation_derivatives import get_derivative
 class LTExtractor:
     """Creates an Extractor object, that calculates the jacobians of a given entwork."""
 
-    def __init__(self, net, x0):
+    def __init__(self, net, x0, labels):
         super(LTExtractor, self).__init__()
 
         self.net = net
         self.activations = [x0]
         self.linear_transformations = []
         self.results_path = "results/transformations/"
+        self.labels = labels
 
     def store(self, end_path):
         path = self.results_path + end_path
@@ -26,6 +27,10 @@ class LTExtractor:
                 path + "transformation_" + str(i) + ".npy",
                 transformation.detach().numpy(),
             )
+
+        np.save(
+            path + "labels.npy", self.labels.detach().numpy(),
+        )
 
     def extract(self):
         for i in range(self.net.get_depth()):
