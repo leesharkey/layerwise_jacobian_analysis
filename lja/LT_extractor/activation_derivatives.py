@@ -19,12 +19,14 @@ def leaky_derivative(input):
 
 def get_derivative(act):
 
-    # print(act.__class__.__name__)
+    print(act.__class__.__name__)
     if act.__class__.__name__ == "ReLU":
         return relu_derivative
     elif act.__class__.__name__ == "Sigmoid":
         return sigmoid_derivative
     elif act.__class__.__name__ == "LeakyReLU":
         return leaky_derivative
+    elif act.__class__.__name__ == "Softmax":
+        return relu_derivative
     else:
         raise Exception("activation_derivatives: derivative not implemented")

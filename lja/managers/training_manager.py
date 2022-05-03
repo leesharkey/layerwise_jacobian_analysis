@@ -205,7 +205,7 @@ class LogicalNetworkTrainingManager(TrainingManager):
 
 
 class MnistNetworkTrainingManager(TrainingManager):
-    def __init__(self, model_type, enable_training):
+    def __init__(self, model_type, enable_training=False):
         super(MnistNetworkTrainingManager, self).__init__(enable_training)
 
         # either dropout or no_dropoput

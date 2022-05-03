@@ -28,13 +28,13 @@ defaults:
                 sizes: [ 4, 128, 64, 1 ]
         mnist:
             no_dropout:
-              load_model_name: null
+              load_model_name: final_no_dropout_extra
               num_epochs: 1000
               batch_size: 32
               dropout: False
-              sizes: [ 784, 1024, 1024, 512, 10 ] # Alternatively, Schmidhuber former SoTA: [ 784, 2500, 2000, 1500, 1000, 500, 10 ]
+              sizes: [ 784, 1024, 1024, 512, 16, 10 ] # Alternatively, Schmidhuber former SoTA: [ 784, 2500, 2000, 1500, 1000, 500, 10 ]
             dropout:
-              load_model_name: null
+              load_model_name: final_dropout
               num_epochs: 1000
               batch_size: 32
               dropout: True
