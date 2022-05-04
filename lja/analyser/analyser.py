@@ -204,13 +204,45 @@ class Analyser:
             file_name="read_in_",
         )
 
-    def visualize_read_vectors(self, n=10):
-        vh = self.vh[0:n, :-1]
-        print(vh.shape)
+    def visualize_read_vector(self, vector_index, scaled=True):
+        feature = self.vh[vector_index, :-1]
+        if scaled:
+            feature = feature * self.s[vector_index]
 
-        for i in range(vh.shape[0]):
-            self.plotter.plot_image(
-                vh[i, :].reshape(28, 28),
-                title="Read vector" + str(i),
-                file_name="read_vector" + str(i) + "_",
-            )
+        self.plotter.plot_image(
+            feature.reshape(28, 28),
+            title="Read vector" + str(vector_index),
+            file_name="read_vector" + str(vector_index) + "_",
+        )
+
+    def visualize_read_vectors(self, n=10):
+        for i in range(n):
+            self.visualize_read_vector(i)
+
+    def visualize_write_vector(self, vector_index, threshold=None):
+        self.visualize_read_vector(vector_index)
+        U = self.u[:, :, vector_index]
+
+        if threshold is not None:
+            U[U < -threshold] = -1
+            U[U > threshold] = 1
+
+        self.plotter.plot_image(
+            U,
+            title="Write vector" + str(vector_index),
+            file_name="write_vector" + str(vector_index) + "_",
+        )
+
+    def visualize_write_vectors(self, n=10, threshold=None):
+        for i in range(n):
+            self.visualize_write_vector(i)
+
+    def print_shapes(self):
+
+        print("\nSide:", self.side)
+        print("Input:", self.activation.shape)
+        print("Output:", self.activation_p1.shape)
+
+        print("\nVH:", self.vh.shape)
+        print("s:", self.s.shape)
+        print("U:", self.u.shape)

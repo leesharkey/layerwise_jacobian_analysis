@@ -32,9 +32,11 @@ class Plotter:
         if self.show_plots:
             plt.show()
 
-    def plot_image(self, image, title, file_name=None):
+    def plot_image(self, image, title, file_name=None, aspect="auto"):
 
-        plt.imshow(image)
+        plt.clf()
+        plt.imshow(image, aspect=aspect)
+        plt.colorbar()
         self.present_image(title, file_name)
 
     def plot_scatter(self, data, title, file_name=None):
@@ -71,7 +73,9 @@ class Plotter:
 
         # perfrom reduction
         if type == "tSNE":
-            res = TSNE(2, init="pca", learning_rate="auto").fit_transform(M)
+            res = TSNE(2, init="pca", learning_rate="auto", n_iter=2000).fit_transform(
+                M
+            )
 
         elif type == "PCA":
             res = PCA(n_components=2).fit_transform(M)
