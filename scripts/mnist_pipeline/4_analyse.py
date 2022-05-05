@@ -1,37 +1,18 @@
 from lja.analyser.analyser import Analyser
 import numpy as np
 import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression
 
-analyser = Analyser("mnist/dropout/", show_plots=True)
+analyser = Analyser("mnist/dropout/", show_plots=False)
+
+# analyser.analyse_decomposition()
+# analyser.print_shapes()
 
 analyser.load_data(side="left", layer=0)
-# analyser.analyse_decomposition()
+analyser.create_all_plots(n=10, read_threshold=0.35, write_threshold=0.05)
 
-# analyser.activation_plots()
-# analyser.read_in_scaled_plots()
-# analyser.stacked_matrix_plots()
-# analyser.visualize_read_vectors()
+analyser.load_data(side="left", layer=1)
+analyser.create_all_plots(n=10, read_threshold=0.05, write_threshold=0.05)
 
-analyser.print_shapes()
-analyser.visualize_write_vector()
-
-
-"""
-analyser.print_shapes()
-f_index = 9
-
-feature = analyser.vh[f_index, :]
-feature_scaled = feature * analyser.s[f_index]
-print(feature_scaled.shape)
-
-analyser.plotter.plot_image(feature_scaled[0:-1].reshape(28, 28), "test")
-
-# for sample 1
-samples = [10, 110, 210, 310, 410, 510, 610, 710, 810, 910]
-U = analyser.u[:, :, f_index]
-U[U < -0.004] = -1
-U[U > 0.004] = 1
-
-# the write vector is:
-analyser.plotter.plot_image(U, "test")
-"""
+analyser.load_data(side="left", layer=2)
+analyser.create_all_plots(n=10, read_threshold=0.05, write_threshold=0.05)

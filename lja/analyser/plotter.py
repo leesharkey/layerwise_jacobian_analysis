@@ -28,11 +28,11 @@ class Plotter:
     def present_image(self, title, file_name):
         plt.title(title)
         if file_name is not None:
-            plt.savefig(self.path + file_name + ".png")
+            plt.savefig(self.path + file_name + ".png", dpi=500)
         if self.show_plots:
             plt.show()
 
-    def plot_image(self, image, title, file_name=None, aspect="auto"):
+    def plot_image(self, image, title="", file_name=None, aspect="auto"):
 
         plt.clf()
         plt.imshow(image, aspect=aspect)
@@ -42,6 +42,7 @@ class Plotter:
     def plot_scatter(self, data, title, file_name=None):
 
         # plot
+        plt.close("all")
         fig, ax = plt.subplots(1)
         sns.scatterplot(
             x="x",
@@ -50,13 +51,12 @@ class Plotter:
             palette=sns.color_palette(),
             data=data,
             ax=ax,
-            s=120,
+            s=20,
         )
 
         # add labels
-        if True:
+        if False:
             for idx, row in data.iterrows():
-                # plt.text(row["x"], row["y"], row["label_string"])
                 plt.text(row["x"], row["y"], row["label"])
 
         self.present_image(title, file_name)

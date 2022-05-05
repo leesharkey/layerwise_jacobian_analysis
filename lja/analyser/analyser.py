@@ -17,15 +17,17 @@ class Analyser:
         self.s = None
         self.u = None
         self.vh = None
+        self.k = None
         self.activation = None
         self.activation_p1 = None
         self.labels = None
         self.plotter = Plotter(path, show_plots)
 
-    def load_data(self, side, layer):
+    def load_data(self, side, layer, k="all"):
         # config
         self.side = side
         self.layer = layer
+        self.k = k
         self.plotter.set_layer(layer)
 
         # Load decompositions
@@ -42,6 +44,8 @@ class Analyser:
         self.s = np.load(os.path.join(path, "s.npy"))
         self.u = np.load(os.path.join(path, "u.npy"))
         self.vh = np.load(os.path.join(path, "vh.npy"))
+
+        # TODO: take subet of vectors
 
         # Load activation
         path = "results/transformations/" + self.path
@@ -159,31 +163,17 @@ class Analyser:
                 )
                 print()
 
-    def stacked_matrix_plots(self):
+    def reduce_all_write_vectors(self):
+        U = self.u
+        U_flatten = U.reshape(U.shape[0], U.shape[1] * U.shape[2])
 
-        if self.side == "left":
-            U = self.u
-            U_flatten = U.reshape(U.shape[0], U.shape[1] * U.shape[2])
-
-            self.plotter.plot_reductions(
-                U_flatten,
-                self.labels,
-                self.activation,
-                title="U projections",
-                file_name="U_projections_",
-            )
-
-        elif self.side == "right":
-            VH = self.vh
-            VH_flatten = VH.reshape(VH.shape[0], VH.shape[1] * VH.shape[2])
-
-            self.plotter.plot_reductions(
-                VH_flatten,
-                self.labels,
-                self.activation,
-                title="VH projections",
-                file_name="VH_projections_",
-            )
+        self.plotter.plot_reductions(
+            U_flatten,
+            self.labels,
+            self.activation,
+            title="U projections",
+            file_name="U_projections_",
+        )
 
     def activation_plots(self):
         self.plotter.plot_reductions(
@@ -204,38 +194,83 @@ class Analyser:
             file_name="read_in_",
         )
 
-    def visualize_read_vector(self, vector_index, scaled=True):
-        feature = self.vh[vector_index, :-1]
-        if scaled:
-            feature = feature * self.s[vector_index]
+    def visualize_read_vector(self, vector_index, threshold=None, scaled=True):
+        if self.layer == 0:
+            vector = self.vh[vector_index, :-1]
+            vector = vector.reshape(28, 28)
+        else:
+            vector = self.vh[vector_index, :]
+            vector = np.expand_dims(vector, axis=0)
+
+        if threshold is not None:
+            vector = self.apply_threshold(vector, threshold)
+        elif scaled:
+            vector = vector * self.s[vector_index]
 
         self.plotter.plot_image(
-            feature.reshape(28, 28),
+            vector,
             title="Read vector" + str(vector_index),
-            file_name="read_vector" + str(vector_index) + "_",
+            file_name="Vector"
+            + str(vector_index)
+            + "/read_vector"
+            + str(vector_index)
+            + "_"
+            + str(threshold)
+            + "_",
         )
 
-    def visualize_read_vectors(self, n=10):
-        for i in range(n):
-            self.visualize_read_vector(i)
-
     def visualize_write_vector(self, vector_index, threshold=None):
-        self.visualize_read_vector(vector_index)
         U = self.u[:, :, vector_index]
 
         if threshold is not None:
-            U[U < -threshold] = -1
-            U[U > threshold] = 1
+            U = self.apply_threshold(U, threshold)
 
         self.plotter.plot_image(
             U,
             title="Write vector" + str(vector_index),
-            file_name="write_vector" + str(vector_index) + "_",
+            file_name="Vector"
+            + str(vector_index)
+            + "/write_vector"
+            + str(vector_index)
+            + "_"
+            + str(threshold)
+            + "_",
         )
 
-    def visualize_write_vectors(self, n=10, threshold=None):
+    def reduce_write_vector(self, vector_index):
+        U = self.u[:, :, vector_index]
+
+        self.plotter.plot_reductions(
+            U,
+            self.labels,
+            self.activation,
+            title="U projection_" + str(vector_index),
+            file_name="Vector"
+            + str(vector_index)
+            + "/U_projections_"
+            + str(vector_index)
+            + "_",
+        )
+
+    def visualize_vectors(self, n=10, read_threshold=None, write_threshold=None):
         for i in range(n):
+
+            # create directories
+            path = self.plotter.path + "Vector" + str(i)
+            if not os.path.exists(path):
+                os.makedirs(path)
+
+            # call submethods
             self.visualize_write_vector(i)
+            self.visualize_read_vector(i)
+
+            if write_threshold is not None:
+                self.visualize_write_vector(i, write_threshold)
+
+            if read_threshold is not None:
+                self.visualize_read_vector(i, read_threshold)
+
+            self.reduce_write_vector(i)
 
     def print_shapes(self):
 
@@ -246,3 +281,22 @@ class Analyser:
         print("\nVH:", self.vh.shape)
         print("s:", self.s.shape)
         print("U:", self.u.shape)
+
+    def apply_threshold(self, X, quantile):
+        pos_q = np.quantile(X[X > 0], 1 - quantile)
+        X[X > pos_q] = 1
+
+        neg_q = np.quantile(X[X < 0], quantile)
+        X[X < neg_q] = -1
+
+        X[np.abs(X) != 1] = 0
+
+        return X
+
+    def create_all_plots(self, n=10, read_threshold=None, write_threshold=None):
+        self.activation_plots()
+        self.read_in_scaled_plots()
+        self.reduce_all_write_vectors()
+        self.visualize_vectors(
+            n=n, write_threshold=write_threshold, read_threshold=read_threshold
+        )
