@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from functools import partial
 
 
 def get_scaled_transform_matrix(postactivations, transformation_mat, preactivations):
@@ -11,9 +12,9 @@ def get_scaled_transform_matrix(postactivations, transformation_mat, preactivati
 
 
 def get_stats(transform_matrix, parameter, y_prime, y):
-    num_matches = torch.isclose(transform_matrix, parameter, atol=1e-2).sum()
+    num_matches = torch.isclose(transform_matrix, parameter, atol=5e-3).sum()
     frac_match = num_matches / torch.numel(transform_matrix)
-    print("Fraction matched in jacobian and weight mat: %f" % frac_match.item())
+    print("Fraction matched in transform matrix and weight matrix: %f" % frac_match.item())
 
     diff = torch.abs(y - y_prime)
     print("Diff between y and y_prime: %f" % diff.sum().item())
@@ -21,7 +22,7 @@ def get_stats(transform_matrix, parameter, y_prime, y):
 
 if __name__ == "__main__":
 
-    activation = "gelu"
+    activation = "softmax"
 
     if activation == "relu":
         act = nn.ReLU(inplace=True)
@@ -35,10 +36,13 @@ if __name__ == "__main__":
     elif activation == "sigmoid":
         act = nn.Sigmoid()
 
+    elif activation == "softmax":
+        act = partial(torch.nn.functional.softmax, dim=0)
+
     else:
         print("Invalid activation")
 
-    size = 4000
+    size = 1000
     shift = 0
     device = "cpu"
     net = nn.Linear(in_features=size, out_features=size, bias=True).to(device)
@@ -47,10 +51,10 @@ if __name__ == "__main__":
     # input/ output
     x = torch.randn(size).to(device) + shift
     x = x.requires_grad_()
-    y = act(net(x))
 
     # activations
     preact = net(x)
+    y = act(preact)
 
     # parameters
     params = net.weight.data
