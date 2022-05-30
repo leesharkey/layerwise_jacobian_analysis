@@ -17,6 +17,10 @@ class Plotter:
         self.layer = None
         self.plot_path = "plots/" + path
         self.show_plots = show_plots
+        self.path = self.plot_path
+
+        # a function that is called as a last step before plotting. It can contain additional augmentations to the origninal plot
+        self.custom_function = None
 
     def set_layer(self, layer):
         self.path = self.plot_path + "Layer" + str(layer) + "/"
@@ -29,6 +33,9 @@ class Plotter:
 
     def present_image(self, title, file_name):
         plt.title(title)
+        if self.custom_function is not None:
+            self.custom_function()
+
         if file_name is not None:
             plt.savefig(self.path + file_name + ".png", dpi=500)
         if self.show_plots:
@@ -57,25 +64,18 @@ class Plotter:
         )
 
         # add labels
-        if False:
+        if "text_labels" in list(data.columns):
             for idx, row in data.iterrows():
-                plt.text(row["x"], row["y"], row["label"])
+                plt.text(row["x"], row["y"], row["text_labels"])
 
         self.present_image(title, file_name)
 
-    def plot_reduction(self, type, M, labels, x, title, file_name=None):
+    def plot_reduction(self, type, M, labels, text_labels, title, file_name=None):
 
         # set up path and title
         title = type + ": " + title
         file_name = file_name + type
         print("\n", title, "\t M-diemnsions: ", M.shape)
-
-        # convert input data to strings for labels
-        if x is not None:
-            x = np.round(x, 2)
-            x_string = [",".join(str(item2) for item2 in item) for item in x]
-        else:
-            x_string = np.repeat("-", len(labels))
 
         # perfrom reduction
         if type == "tSNE":
@@ -95,7 +95,9 @@ class Plotter:
                 "x": res[:, 0],
                 "y": res[:, 1],
                 "label": labels,
-                "label_string": x_string,
+                "text_labels": np.repeat("", len(labels))
+                if text_labels is None
+                else text_labels,
                 "style": "$f$",
             }
         )

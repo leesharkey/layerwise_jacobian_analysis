@@ -1,6 +1,7 @@
 import os
 import numpy as np
 from lja.analyser.plotter import Plotter
+import matplotlib.pyplot as plt
 import pandas as pd
 
 from sklearn.cluster import KMeans
@@ -22,6 +23,8 @@ class Clusterer:
         self.number_of_clusters = []
         self.number_of_layers = None
         self.plotter = Plotter(path, show_plots)
+        self.ks = []
+        self.center_of_clusters = []
 
     def load_data(self, side="left"):
         # config
@@ -38,20 +41,37 @@ class Clusterer:
 
             if self.side == "left":
                 self.u_list.append(np.load(os.path.join(path, "u.npy")))
+                self.ks.append(self.u_list[0].shape[2])
 
             elif self.side == "right":
                 self.vh_list.append(np.load(os.path.join(path, "vh.npy")))
+                self.ks.append(self.vh_list[0].shape[2])
+
+        pass
 
     def store(self):
         # Set path to decompositions
         path_folder = "results/decompositions/" + self.path + self.side
         print("\nStore in: ", path_folder)
 
+        # layers, vectors, num_clusters, 1024
         # Store clusters
         for layer in range(self.number_of_layers):
             newpath = path_folder + "/Layer" + str(layer) + "/"
+
+            # (1)
             np.save(newpath + "number_of_clusters.npy", self.number_of_clusters[layer])
+
+            # (k, n)
             np.save(newpath + "clusters.npy", self.clusters[layer])
+
+            # (k, n, dim)
+            np.save(
+                newpath + "center_of_clusters.npy",
+                np.array(self.center_of_clusters[layer], dtype=object),
+            )
+
+        pass
 
     def get_vectors(self, layer, vector_index):
         if self.side == "left":
@@ -62,29 +82,100 @@ class Clusterer:
 
         return vectors
 
-    def cluster_all_vectors(self, n=10):
+    def cluster_all_vectors(self, n=0):
         for layer in range(self.number_of_layers):
-            print("\n\n --- Layer: ", layer)
 
+            print("\n\n --- Layer: ", layer)
             clusters = []
             number_of_clusters = []
-            for i in range(n):
-                print("\nVector:", i)
-                n_clusters, cluster_labels = self.cluster_vectors(layer, i)
+            centers_list = []
+            k = self.ks[layer]
 
-                clusters.append(cluster_labels)
+            for vector_index in range(k):
+                print("\nVector:", vector_index)
+                plot = vector_index < n
+
+                # 1. Find number of clusters
+                n_clusters = self.find_number_of_clusters(
+                    layer, vector_index, plot=plot
+                )
                 number_of_clusters.append(n_clusters)
 
-            self.number_of_clusters.append(number_of_clusters)
-            self.clusters.append(cluster_labels)
+                # 2. Clustering
+                cluster_labels = self.cluster_vectors(layer, vector_index, n_clusters)
+                clusters.append(cluster_labels)
 
-    def cluster_vectors(self, layer, vector_index, method="spectral"):
+                # 3. Compute centers
+                centers = self.get_center_of_clusters(
+                    layer, vector_index, cluster_labels, n_clusters
+                )
+                centers_list.append(centers)
+
+                # 4. Plot
+                if plot:
+                    self.plot_cluster_embedding(
+                        layer, vector_index, cluster_labels, centers
+                    )
+
+            # Store
+            self.number_of_clusters.append(number_of_clusters)
+            self.clusters.append(clusters)
+            self.center_of_clusters.append(centers_list)
+
+        pass
+
+    def get_center_of_clusters(self, layer, vector_index, cluster_labels, n_clusters):
+
+        # data
+        vectors = self.get_vectors(layer, vector_index)
+        centers = []
+
+        # loop thorugh clusters
+        for label in range(n_clusters):
+            mask = cluster_labels == label
+            cluster = vectors[mask, :]
+            center = np.mean(
+                cluster, axis=0
+            )  #  mean center, maybe try trimmed mean center
+            centers.append(center)
+
+        return centers
+
+    def plot_cluster_embedding(self, layer, vector_index, cluster_labels, centers):
 
         # data
         vectors = self.get_vectors(layer, vector_index)
 
-        # find number of clusters
-        n_clusters = self.find_number_of_clusters(layer, vector_index)
+        # add center labels
+        text_labels = [str(item) for item in range(len(centers))]
+        text_labels = np.append(np.repeat("", len(cluster_labels)), text_labels)
+
+        # center corrdinates
+        vectors = np.append(vectors, centers, axis=0)
+        cluster_labels = np.append(cluster_labels, range(len(centers)))
+
+        # plot clusters
+        self.plotter.set_layer(layer)
+        self.plotter.plot_reductions(
+            vectors,
+            cluster_labels,
+            text_labels,
+            title="U projection_clustered_" + str(vector_index),
+            file_name="Vector"
+            + str(vector_index)
+            + "/U_projections_"
+            + str(vector_index)
+            + "_"
+            + "clustered"
+            + "_",
+        )
+
+        pass
+
+    def cluster_vectors(self, layer, vector_index, n_clusters, method="spectral"):
+
+        # data
+        vectors = self.get_vectors(layer, vector_index)
 
         # clustering
         if method == "kmeans":
@@ -107,23 +198,7 @@ class Clusterer:
             silhouette_avg,
         )
 
-        # plot
-        self.plotter.set_layer(layer)
-        self.plotter.plot_reductions(
-            vectors,
-            cluster_labels,
-            None,
-            title="U projection_clustered_" + str(vector_index),
-            file_name="Vector"
-            + str(vector_index)
-            + "/U_projections_"
-            + str(vector_index)
-            + "_"
-            + "clustered"
-            + "_",
-        )
-
-        return n_clusters, cluster_labels
+        return cluster_labels
 
     def find_number_of_clusters(
         self,
@@ -159,25 +234,26 @@ class Clusterer:
         gaps_indices = np.sort(gaps_indices[:size_of_candidate_clusters])
         optimal_gap = gaps_indices[0]
 
-        # data for plotting
-        data = pd.DataFrame(
-            {
-                "x": np.arange(len(eigenvalues)) + 1,
-                "y": eigenvalues,
-                "label": np.ones(len(eigenvalues)),
-                "style": "$f$",
-            }
-        )
+        # data for plotting the first n
+        if plot:
+            data = pd.DataFrame(
+                {
+                    "x": np.arange(len(eigenvalues)) + 1,
+                    "y": eigenvalues,
+                    "label": np.ones(len(eigenvalues)),
+                    "style": "$f$",
+                }
+            )
 
-        self.plotter.set_layer(layer)
-        self.plotter.plot_scatter(
-            data,
-            title="eigengap plot: " + str(gaps_indices),
-            file_name="Vector"
-            + str(vector_index)
-            + "/eigengap_"
-            + str(vector_index)
-            + "_",
-        )
+            self.plotter.set_layer(layer)
+            self.plotter.plot_scatter(
+                data,
+                title="eigengap plot: " + str(gaps_indices),
+                file_name="Vector"
+                + str(vector_index)
+                + "/eigengap_"
+                + str(vector_index)
+                + "_",
+            )
 
         return optimal_gap
