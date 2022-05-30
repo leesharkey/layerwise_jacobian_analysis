@@ -23,7 +23,9 @@ class Plotter:
         if not os.path.exists(self.path):
             os.makedirs(self.path)
 
-        print("Save plots in:", self.path)
+        if layer != self.layer:
+            print("Save plots in:", self.path)
+        self.layer = layer
 
     def present_image(self, title, file_name):
         plt.title(title)
@@ -48,7 +50,7 @@ class Plotter:
             x="x",
             y="y",
             hue="label",
-            palette=sns.color_palette(),
+            palette=sns.color_palette(n_colors=len(set(data["label"]))),
             data=data,
             ax=ax,
             s=20,
@@ -63,13 +65,17 @@ class Plotter:
 
     def plot_reduction(self, type, M, labels, x, title, file_name=None):
 
+        # set up path and title
         title = type + ": " + title
         file_name = file_name + type
         print("\n", title, "\t M-diemnsions: ", M.shape)
 
         # convert input data to strings for labels
-        x = np.round(x, 2)
-        x_string = [",".join(str(item2) for item2 in item) for item in x]
+        if x is not None:
+            x = np.round(x, 2)
+            x_string = [",".join(str(item2) for item2 in item) for item in x]
+        else:
+            x_string = np.repeat("-", len(labels))
 
         # perfrom reduction
         if type == "tSNE":
@@ -83,6 +89,7 @@ class Plotter:
         else:
             raise Exception("Plotter: reduction type not implemented")
 
+        # store results in a dataframe
         data = pd.DataFrame(
             {
                 "x": res[:, 0],
@@ -101,4 +108,4 @@ class Plotter:
         self.plot_reduction("tSNE", M, labels, x, title, file_name)
 
         # PCA
-        self.plot_reduction("PCA", M, labels, x, title, file_name)
+        # self.plot_reduction("PCA", M, labels, x, title, file_name)
