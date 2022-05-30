@@ -4,6 +4,7 @@ from lja.analyser.plotter import Plotter
 import scipy.stats as stats
 import math
 from scipy.spatial import distance_matrix
+import pandas as pd
 
 
 class Analyser:
@@ -44,6 +45,7 @@ class Analyser:
         self.s = np.load(os.path.join(path, "s.npy"))
         self.u = np.load(os.path.join(path, "u.npy"))
         self.vh = np.load(os.path.join(path, "vh.npy"))
+        self.cluster_labels = np.load(os.path.join(path, "clusters.npy"))
 
         # TODO: take subet of vectors
 
@@ -163,7 +165,7 @@ class Analyser:
                 )
                 print()
 
-    def reduce_all_write_vectors(self):
+    def reduce_write_matrix(self):
         U = self.u
         U_flatten = U.reshape(U.shape[0], U.shape[1] * U.shape[2])
 
@@ -237,18 +239,20 @@ class Analyser:
             + "_",
         )
 
-    def reduce_write_vector(self, vector_index):
+    def reduce_write_vector(self, vector_index, labels=None, annotation="classes"):
         U = self.u[:, :, vector_index]
 
         self.plotter.plot_reductions(
             U,
-            self.labels,
+            self.labels if (labels is None) else labels,
             self.activation,
             title="U projection_" + str(vector_index),
             file_name="Vector"
             + str(vector_index)
             + "/U_projections_"
             + str(vector_index)
+            + "_"
+            + str(annotation)
             + "_",
         )
 
@@ -270,6 +274,10 @@ class Analyser:
             if read_threshold is not None:
                 self.visualize_read_vector(i, read_threshold)
 
+    def reduce_all_write_vectors(self, n=10):
+        for i in range(n):
+
+            # t-SNE
             self.reduce_write_vector(i)
 
     def print_shapes(self):
@@ -296,7 +304,7 @@ class Analyser:
     def create_all_plots(self, n=10, read_threshold=None, write_threshold=None):
         self.activation_plots()
         self.read_in_scaled_plots()
-        self.reduce_all_write_vectors()
+        self.reduce_write_matrix()
         self.visualize_vectors(
             n=n, write_threshold=write_threshold, read_threshold=read_threshold
         )
