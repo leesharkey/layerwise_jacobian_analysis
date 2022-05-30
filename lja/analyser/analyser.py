@@ -308,3 +308,4 @@ class Analyser:
         self.visualize_vectors(
             n=n, write_threshold=write_threshold, read_threshold=read_threshold
         )
+        self.reduce_write_matrix()
