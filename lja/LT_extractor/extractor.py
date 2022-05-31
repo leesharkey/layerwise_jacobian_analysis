@@ -1,3 +1,5 @@
+import os.path
+
 import torch
 import numpy as np
 from lja.LT_extractor.activation_derivatives import get_derivative
@@ -18,6 +20,8 @@ class LTExtractor:
     def store(self, end_path):
         path = self.results_path + end_path
         print("Store LT in:", path)
+        if not os.path.exists(path):
+            os.makedirs(path)
 
         for i, activation in enumerate(self.activations):
             np.save(path + "activation_" + str(i) + ".npy", activation.detach().cpu().numpy())
@@ -104,7 +108,7 @@ class LTExtractor:
         print("Min Fraction matched:", frac_match.min().item())
         print("Max Fraction matched:", frac_match.max().item())
         print(
-            "Average Fraction matched in linear tranformation matrices and weight matrix: .%f"
+            "Average Fraction matched in linear tranformation matrices and weight matrix: %f"
             % frac_match.mean()
         )
 
