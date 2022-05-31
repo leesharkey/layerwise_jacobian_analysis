@@ -2,7 +2,8 @@ import torch
 
 
 def relu_derivative(input):
-    return torch.heaviside(input, torch.tensor([0.0]))
+    device = input.device
+    return torch.heaviside(input, torch.tensor([0.0], device=device))
 
 
 def sigmoid_derivative(input):
@@ -10,8 +11,9 @@ def sigmoid_derivative(input):
 
 
 def leaky_derivative(input):
+    device = input.device
     leaky_slope = 0.01
-    derivative = torch.heaviside(input, torch.tensor([leaky_slope]))
+    derivative = torch.heaviside(input, torch.tensor([leaky_slope], device=device))
     derivative[derivative == 0] = leaky_slope
 
     return derivative

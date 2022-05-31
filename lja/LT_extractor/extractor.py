@@ -20,16 +20,16 @@ class LTExtractor:
         print("Store LT in:", path)
 
         for i, activation in enumerate(self.activations):
-            np.save(path + "activation_" + str(i) + ".npy", activation.detach().numpy())
+            np.save(path + "activation_" + str(i) + ".npy", activation.detach().cpu().numpy())
 
         for i, transformation in enumerate(self.linear_transformations):
             np.save(
                 path + "transformation_" + str(i) + ".npy",
-                transformation.detach().numpy(),
+                transformation.detach().cpu().numpy(),
             )
 
         np.save(
-            path + "labels.npy", self.labels.detach().numpy(),
+            path + "labels.npy", self.labels.detach().cpu().numpy(),
         )
 
     def extract(self):
@@ -83,7 +83,8 @@ class LTExtractor:
         # Extend x
         n = x.shape[0]
         dim_input = params_ext.shape[1]
-        x_ext = torch.cat((x, torch.ones(n, 1)), dim=-1)  # [n, dim_input]
+        device = params_ext.device
+        x_ext = torch.cat((x, torch.ones(n, 1, device=device)), dim=-1)  # [n, dim_input]
         x_ext = x_ext[:, None, :].reshape((n, dim_input, 1))  # [n, dim_input, 1]
 
         # Claculate y_prime

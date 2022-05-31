@@ -5,6 +5,7 @@ import torch
 # 1. Load model
 manager = MnistNetworkTrainingManager(model_type="dropout")
 manager.validation_loop()
+net_device = manager.net.device
 
 # 2. Input query
 # select n-samples of each of the 10 different classes
@@ -17,6 +18,7 @@ for i in range(10):
 
 # select final input query
 x0 = manager.test_dataset.data.reshape(-1, 28 * 28).float()[indices, :]
+x0 = x0.to(net_device)
 labels = labels[indices]
 
 # 3. Create extractor
