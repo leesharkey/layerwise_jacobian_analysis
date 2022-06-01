@@ -1,6 +1,7 @@
 import glob, os
 import numpy as np
 from sklearn.utils import extmath
+import warnings
 
 
 class Decomposition:
@@ -65,7 +66,7 @@ class Decomposition:
             "\nSize of vh\t",
             vh.shape,
         )
-
+        tol = 1e-4
         if self.side == "left":
             U = u
 
@@ -79,9 +80,11 @@ class Decomposition:
             # 3. Write to ouput
             t = U @ read_in_scaled
             xp1_hat = t[range(t.shape[0]), :, range(t.shape[0])]
-            acc = np.sum(np.isclose(xp1_hat, xp1, atol=1e-04)) / xp1_hat.size
+            acc = np.sum(np.isclose(xp1_hat, xp1, atol=tol)) / xp1_hat.size
+            error = np.mean(np.abs(xp1_hat - xp1))
 
-            print("Reconstruction accuracy:", acc)
+            print(f"Reconstruction accuracy (tol={tol}):", acc)
+            print("Reconstruction AbsError:", error)
 
         elif self.side == "right":
             VH = vh
@@ -100,9 +103,11 @@ class Decomposition:
 
             # 3. Write to output
             xp1_hat = np.transpose(u @ read_in_scaled)
-            acc = np.sum(np.isclose(xp1_hat, xp1, atol=1e-04)) / xp1_hat.size
+            acc = np.sum(np.isclose(xp1_hat, xp1, atol=tol)) / xp1_hat.size
+            error = np.mean(np.abs(xp1_hat - xp1))
 
-            print("Reconstruction accuracy:", acc)
+            print(f"Reconstruction accuracy (tol={tol}):", acc)
+            print("Reconstruction AbsError:", error)
 
     def get_decomposition(self, T, k, side):
 
@@ -113,13 +118,15 @@ class Decomposition:
             # 2. Apply SVD
             if T_stacked.shape[0] < k:
                 k = T_stacked.shape[0]
-                print(
-                    "Warning: k reduced - k larger than stacked datapoints available -  increase n to avoid this"
+                warnings.warn(
+                    "k has been automatically reduced - k larger than stacked datapoints available -  increase n to avoid this"
                 )
 
             elif T.shape[2] < k:
                 k = T.shape[2]
-                print("Warning: k reduced - k larger than available dimensions")
+                warnings.warn(
+                    "k has been automatically reduced - k larger than available dimensions"
+                )
 
             u_stacked, s, vh = extmath.randomized_svd(T_stacked, k, random_state=1)
 
