@@ -82,7 +82,7 @@ class Clusterer:
 
         return vectors
 
-    def cluster_all_vectors(self, n=0):
+    def cluster_all_vectors(self, plot_first_n=10):
         for layer in range(self.number_of_layers):
 
             print("\n\n --- Layer: ", layer)
@@ -93,7 +93,7 @@ class Clusterer:
 
             for vector_index in range(k):
                 print("\nVector:", vector_index)
-                plot = vector_index < n
+                plot = vector_index < plot_first_n
 
                 # 1. Find number of clusters
                 n_clusters = self.find_number_of_clusters(
@@ -154,20 +154,16 @@ class Clusterer:
         vectors = np.append(vectors, centers, axis=0)
         cluster_labels = np.append(cluster_labels, range(len(centers)))
 
+        # check if folder exists
+
         # plot clusters
-        self.plotter.set_layer(layer)
+        self.plotter.set_layer_and_vector(layer, vector_index)
         self.plotter.plot_reductions(
             vectors,
             cluster_labels,
-            text_labels,
+            text_labels=text_labels,
             title="U projection_clustered_" + str(vector_index),
-            file_name="Vector"
-            + str(vector_index)
-            + "/U_projections_"
-            + str(vector_index)
-            + "_"
-            + "clustered"
-            + "_",
+            file_name="U_projections_" + str(vector_index) + "_" + "clustered" + "_",
         )
 
         pass
@@ -245,15 +241,11 @@ class Clusterer:
                 }
             )
 
-            self.plotter.set_layer(layer)
+            self.plotter.set_layer_and_vector(layer, vector_index)
             self.plotter.plot_scatter(
                 data,
                 title="eigengap plot: " + str(gaps_indices),
-                file_name="Vector"
-                + str(vector_index)
-                + "/eigengap_"
-                + str(vector_index)
-                + "_",
+                file_name="eigengap_" + str(vector_index) + "_",
             )
 
         return optimal_gap

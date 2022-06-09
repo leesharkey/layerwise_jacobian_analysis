@@ -15,6 +15,7 @@ class Plotter:
         super(Plotter, self).__init__()
         warnings.simplefilter(action="ignore", category=FutureWarning)
         self.layer = None
+        self.vector_number = None
         self.plot_path = "plots/" + path
         self.show_plots = show_plots
         self.path = self.plot_path
@@ -22,14 +23,21 @@ class Plotter:
         # a function that is called as a last step before plotting. It can contain additional augmentations to the origninal plot
         self.custom_function = None
 
-    def set_layer(self, layer):
-        self.path = self.plot_path + "Layer" + str(layer) + "/"
+    def set_path(self):
+        self.path = self.plot_path
+
+        if self.layer is not None:
+            self.path += "Layer" + str(self.layer) + "/"
+            if self.vector_number is not None:
+                self.path += "Vector" + str(self.vector_number) + "/"
+
         if not os.path.exists(self.path):
             os.makedirs(self.path)
 
-        if layer != self.layer:
-            print("Save plots in:", self.path)
+    def set_layer_and_vector(self, layer, vector_number=None):
         self.layer = layer
+        self.vector_number = vector_number
+        self.set_path()
 
     def present_image(self, title, file_name):
         plt.title(title)
@@ -48,7 +56,7 @@ class Plotter:
         plt.colorbar()
         self.present_image(title, file_name)
 
-    def plot_scatter(self, data, title, file_name=None):
+    def plot_scatter(self, data, title="", file_name=None):
 
         # plot
         plt.close("all")
@@ -70,7 +78,9 @@ class Plotter:
 
         self.present_image(title, file_name)
 
-    def plot_reduction(self, type, M, labels, text_labels, title, file_name=None):
+    def plot_reduction(
+        self, type, M, labels, text_labels=None, title="", file_name="test"
+    ):
 
         # set up path and title
         title = type + ": " + title
@@ -104,10 +114,10 @@ class Plotter:
 
         self.plot_scatter(data, title, file_name)
 
-    def plot_reductions(self, M, labels, x, title, file_name=None):
+    def plot_reductions(self, M, labels, text_labels=None, title="", file_name="test"):
 
         # t-SNE plot
-        self.plot_reduction("tSNE", M, labels, x, title, file_name)
+        self.plot_reduction("tSNE", M, labels, text_labels, title, file_name)
 
         # PCA
         # self.plot_reduction("PCA", M, labels, x, title, file_name)
