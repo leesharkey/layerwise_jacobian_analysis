@@ -135,7 +135,9 @@ class Constructor:
         return file_name
 
     def load_feature(self, layer, feature_index, target_index):
-
+        """
+        Loads an already computed feature from the disk
+        """
         # set path
         self.set_results_path(layer, feature_index, create_folder=False)
         file_path = self.get_file_name(feature_index, target_index, "file")
@@ -148,7 +150,9 @@ class Constructor:
             return None
 
     def store_feature(self, feature, layer, feature_index, target_index):
-
+        """
+        Stores a feature to the disk as numpy array
+        """
         # set path
         self.set_results_path(layer, feature_index)
         np.save(
@@ -156,7 +160,9 @@ class Constructor:
         )
 
     def plot_feature(self, feature, layer, feature_index, target_index):
-
+        """
+        PLots the feature as heat-map
+        """
         # set path
         self.set_plot_path(layer, feature_index)
 
@@ -184,6 +190,17 @@ class Constructor:
         reuse_stored_features=True,
         store_all_computed_features=False,
     ):
+        """
+        Constructs a single feature.
+        layer                           - the layer of the read vector to be visualised
+        feature_index,                  - the index of the read vector to be visualised
+        target_index,                   - the index of the sample/profile/profile_cluster those write vectors be used for reconstruction
+        plot=True,                      - whether a heat-map of the featuer should be stores
+        store=True,                     - whether the feature should be stored
+        similarity_function             - similarity measure used to compare write and read vectors
+        reuse_stored_features           - whether if already computed features should be loaded. Faster if enabled. Should be disabled for testing/dev.
+        store_all_computed_features     - whether the features that are computed on the fly should be stored (slows down the computation)
+        """
 
         # 0. Check if already computed:
         feature = None
@@ -266,6 +283,12 @@ class Constructor:
         similarity_function=np.dot,
         reuse_stored_features=True,
     ):
+        """
+        Construct multipole features based on the list contents.
+        granularites  - defines which U matrix should be used for reconstruction one of ['sample', 'profile', 'profile_cluster']
+
+        See above
+        """
 
         config_memory = ["-"]
         for (granularity, layer, feature_index, target_index) in itertools.product(
@@ -313,6 +336,9 @@ class ConstructorBySample(Constructor):
             )
 
     def get_write_vector_candidates(self, layer, sample_index):
+        """
+        returns a set of write vectors that is used to match the read vector
+        """
 
         if self.granularity == "sample":
 
@@ -349,6 +375,11 @@ class ConstructorBySample(Constructor):
         return write_vector_candidates
 
     def get_corresponding_target_index(self, layer, sample_index):
+        """
+        returns the profile_index of the next reconstruction call.
+        This function defines which visualisations are used to construct the subsequent features
+        (from hidden to output direction)
+        """
 
         # the corresponding feature is defined by the sample index again: easy mapping
         return sample_index
@@ -369,6 +400,9 @@ class ConstructorByProfile(Constructor):
             )
 
     def get_write_vector_candidates(self, layer, profile_index):
+        """
+        returns a set of write vectors that is used to match the read vector
+        """
 
         if self.granularity == "profile":
 
@@ -406,6 +440,12 @@ class ConstructorByProfile(Constructor):
         return write_vector_candidates
 
     def get_corresponding_target_index(self, layer, profile_index):
+
+        """
+        returns the profile_index of the next reconstruction call.
+        This function defines which visualisations are used to construct the subsequent features
+        (from hidden to output direction)
+        """
 
         if layer == 1:
 
@@ -456,6 +496,10 @@ class ConstructorByProfileCluster(Constructor):
 
     def get_write_vector_candidates(self, layer, profile_cluster_index):
 
+        """
+        returns a set of write vectors that is used to match the read vector
+        """
+
         # pick cluster
         unique_profile_clusters = np.unique(self.profile_clusters[layer - 1], axis=0)
         profile_cluster = unique_profile_clusters[profile_cluster_index]
@@ -468,6 +512,11 @@ class ConstructorByProfileCluster(Constructor):
         return write_vector_candidates
 
     def get_corresponding_target_index(self, layer, profile_cluster_index):
+        """
+        returns the profile_index of the next reconstruction call.
+        This function defines which visualisations are used to construct the subsequent features
+        (from hidden to output direction)
+        """
 
         if layer == 1:
 

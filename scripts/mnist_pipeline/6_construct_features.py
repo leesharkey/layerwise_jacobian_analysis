@@ -8,6 +8,7 @@ from lja.feature_constructor.feature_constructor import (
 if True:
     constructor = ConstructorBySample(path="mnist/dropout_feature/", show_plots=False)
     constructor.load_data(load_path="mnist/dropout/", side="left")
+    constructor.set_granularity("sample")
 
     constructor.construct_single_feature(
         layer=2,
@@ -31,6 +32,7 @@ if True:
 if False:
     constructor = ConstructorByProfile(path="mnist/dropout_feature/", show_plots=False)
     constructor.load_data(load_path="mnist/dropout/", side="left")
+    constructor.set_granularity("profile")
 
     constructor.construct_single_feature(
         layer=2,
@@ -56,6 +58,7 @@ if False:
         path="mnist/dropout_feature/", show_plots=False
     )
     constructor.load_data(load_path="mnist/dropout/", side="left")
+    constructor.set_granularity("profile_cluster")
 
     constructor.construct_single_feature(
         layer=2,
