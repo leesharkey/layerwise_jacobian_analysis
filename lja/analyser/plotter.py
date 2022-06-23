@@ -39,24 +39,24 @@ class Plotter:
         self.vector_number = vector_number
         self.set_path()
 
-    def present_image(self, title, file_name):
+    def present_image(self, title, filename):
         plt.title(title)
         if self.custom_function is not None:
             self.custom_function()
 
-        if file_name is not None:
-            plt.savefig(self.path + file_name + ".png", dpi=500)
+        if filename is not None:
+            plt.savefig(self.path + filename + ".png", dpi=300)
         if self.show_plots:
             plt.show()
 
-    def plot_image(self, image, title="", file_name=None, aspect="auto"):
+    def plot_image(self, image, title="", filename=None, aspect="auto"):
 
         plt.clf()
         plt.imshow(image, aspect=aspect)
         plt.colorbar()
-        self.present_image(title, file_name)
+        self.present_image(title, filename)
 
-    def plot_scatter(self, data, title="", file_name=None):
+    def plot_scatter(self, data, title="", filename=None):
 
         # plot
         plt.close("all")
@@ -76,15 +76,15 @@ class Plotter:
             for idx, row in data.iterrows():
                 plt.text(row["x"], row["y"], row["text_labels"])
 
-        self.present_image(title, file_name)
+        self.present_image(title, filename)
 
     def plot_reduction(
-        self, type, M, labels, text_labels=None, title="", file_name="test"
+        self, type, M, labels, text_labels=None, title="", filename="test"
     ):
 
         # set up path and title
         title = type + ": " + title
-        file_name = file_name + type
+        filename = filename + type
         print("\n", title, "\t M-diemnsions: ", M.shape)
 
         # perfrom reduction
@@ -112,12 +112,25 @@ class Plotter:
             }
         )
 
-        self.plot_scatter(data, title, file_name)
+        self.plot_scatter(data, title, filename)
 
-    def plot_reductions(self, M, labels, text_labels=None, title="", file_name="test"):
+    def plot_reductions(self, M, labels, text_labels=None, title="", filename="test"):
 
         # t-SNE plot
-        self.plot_reduction("tSNE", M, labels, text_labels, title, file_name)
+        self.plot_reduction("tSNE", M, labels, text_labels, title, filename)
 
         # PCA
-        # self.plot_reduction("PCA", M, labels, x, title, file_name)
+        # self.plot_reduction("PCA", M, labels, x, title, filename)
+
+    def plot_line_plot(self, x, y, title, ylabel, xlabel, filename):
+
+        # plot
+        plt.close("all")
+        plt.plot(x, y)
+
+        # design
+        plt.ylabel(ylabel)
+        plt.xlabel(xlabel)
+        plt.xticks(x)
+
+        self.present_image(title, filename)
