@@ -1,11 +1,10 @@
 from lja.feature_constructor.feature_constructor import (
     ConstructorBySample,
     ConstructorByProfile,
-    ConstructorByProfileCluster,
 )
 
 # By sample
-if True:
+if False:
     constructor = ConstructorBySample(path="mnist/dropout_feature/", show_plots=False)
     constructor.load_data(load_path="mnist/dropout/", side="left")
     constructor.set_granularity("profile")
@@ -20,6 +19,10 @@ if True:
     )
 
 if False:
+
+    constructor = ConstructorBySample(path="mnist/dropout_feature/", show_plots=False)
+    constructor.load_data(load_path="mnist/dropout/", side="left")
+
     constructor.construct_multiple_features(
         layers=[1, 2],
         feature_indices=[0, 1],
@@ -30,7 +33,7 @@ if False:
     )
 
 # By Profile
-if False:
+if True:
     constructor = ConstructorByProfile(path="mnist/dropout_feature/", show_plots=False)
     constructor.load_data(load_path="mnist/dropout/", side="left")
     constructor.set_granularity("profile")
@@ -43,6 +46,10 @@ if False:
         store=True,
         reuse_stored_features=False,
     )
+
+if False:
+    constructor = ConstructorByProfile(path="mnist/dropout_feature/", show_plots=False)
+    constructor.load_data(load_path="mnist/dropout/", side="left")
 
     constructor.construct_multiple_features(
         layers=[1, 2],

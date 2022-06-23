@@ -327,13 +327,13 @@ class ConstructorBySample(Constructor):
 
             # 2. Pick the u-vector center the sample belongs to for each dimension seperately
 
-            # pick profile the sample belongs to
+            # pick the profile the sample belongs to
             profile = self.clusters[layer - 1][sample_index, :]
 
-            # pick the clusters for each dimension
+            # pick the clusters centers
             center_of_clusters = self.center_of_clusters[layer - 1]
 
-            # loop thorugh dimensions
+            # pick the profle centers in the U vector space of the profile
             write_vector_candidates = center_of_clusters[profile]
 
         return write_vector_candidates
@@ -371,16 +371,14 @@ class ConstructorByProfile(Constructor):
         if self.granularity == "profile":
 
             # pick profile
-            unique_profiles = np.unique(self.clusters[layer - 1], axis=1)
-            profile = unique_profiles[:, profile_index]
+            unique_profiles = np.unique(self.clusters[layer - 1], axis=0)
+            profile = unique_profiles[profile_index, :]
 
             # pick the clusters for each dimension
             center_of_clusters = self.center_of_clusters[layer - 1]
 
-            # loop thorugh dimensions
-            write_vector_candidates = []
-            for cluster, centers in zip(profile, center_of_clusters):
-                write_vector_candidates.append(centers[cluster])
+            # pick the profle centers in the U vector space of the profile
+            write_vector_candidates = center_of_clusters[profile]
 
         return write_vector_candidates
 
@@ -401,14 +399,14 @@ class ConstructorByProfile(Constructor):
 
             # 1. Find samples of the profile that needs to be mapped
             # 1.2 pick profile to be mapped
-            unique_profiles = np.unique(self.clusters[layer - 1], axis=1)
-            profile = unique_profiles[:, profile_index]
+            unique_profiles = np.unique(self.clusters[layer - 1], axis=0)
+            profile = unique_profiles[profile_index, :]
 
             # 1.3 identify samples of that profile; this is a mask
-            members_profile = np.equal(self.clusters[layer - 1].T, profile).all(axis=1)
+            members_profile = np.equal(self.clusters[layer - 1], profile).all(axis=1)
 
             # 2. Find the profiles of the samples in the previous layer
-            previous_profiles = np.transpose(self.clusters[layer - 2])[members_profile]
+            previous_profiles = self.clusters[layer - 2][members_profile, :]
 
             # 3. Pick one of these profiles as the next target, by the method of majority vote:
             # TODO: better methods?
@@ -416,9 +414,9 @@ class ConstructorByProfile(Constructor):
             most_frequent_previous_profile = values[np.argmax(counts)]
 
             # 4. Find the index of this profile to be passed on
-            unique_profiles = np.unique(self.clusters[layer - 2], axis=1)
+            unique_profiles = np.unique(self.clusters[layer - 2], axis=0)
             (target_index_next,) = np.where(
-                np.equal(unique_profiles.T, most_frequent_previous_profile).all(axis=1)
+                np.equal(unique_profiles, most_frequent_previous_profile).all(axis=1)
             )
             target_index_next = target_index_next.item()
 
