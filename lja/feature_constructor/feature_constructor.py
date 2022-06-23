@@ -28,11 +28,6 @@ class Constructor:
         self.number_of_clusters = []
         self.clusters = []
 
-        # profile cluster level
-        self.center_of_profile_clusters = []
-        self.number_of_profile_clusters = []
-        self.profile_clusters = []
-
     def load_data(self, load_path="", side="left"):
 
         # config
@@ -60,23 +55,6 @@ class Constructor:
             )
             self.number_of_clusters.append(
                 np.load(os.path.join(path, "number_of_clusters.npy"))
-            )
-
-            # clusters of profiles
-            self.center_of_profile_clusters.append(
-                np.load(
-                    os.path.join(path, "center_of_profile_clusters.npy"),
-                    allow_pickle=True,
-                )
-            )
-            self.profile_clusters.append(
-                np.load(os.path.join(path, "profile_clusters.npy"), allow_pickle=True)
-            )
-            self.number_of_profile_clusters.append(
-                np.load(
-                    os.path.join(path, "number_of_profile_clusters.npy"),
-                    allow_pickle=True,
-                )
             )
 
         # load class labels
@@ -284,7 +262,7 @@ class Constructor:
         reuse_stored_features=True,
     ):
         """
-        Construct multipole features based on the list contents.
+        Construct multiple features based on the list contents.
         granularites  - defines which U matrix should be used for reconstruction one of ['sample', 'profile', 'profile_cluster']
 
         See above
@@ -328,11 +306,11 @@ class ConstructorBySample(Constructor):
         self.set_granularity(granularity)
 
     def set_granularity(self, granularity):
-        if granularity in ["sample", "profile", "profile_cluster"]:
+        if granularity in ["sample", "profile"]:
             self.granularity = granularity
         else:
             raise Exception(
-                "Invaild granularity argument \n it must be one of [sample, profile, profile_cluster]"
+                "Invaild granularity argument \n it must be one of [sample, profile"
             )
 
     def get_write_vector_candidates(self, layer, sample_index):
@@ -350,27 +328,13 @@ class ConstructorBySample(Constructor):
             # 2. Pick the u-vector center the sample belongs to for each dimension seperately
 
             # pick profile the sample belongs to
-            profile = self.clusters[layer - 1][:, sample_index]
+            profile = self.clusters[layer - 1][sample_index, :]
 
             # pick the clusters for each dimension
             center_of_clusters = self.center_of_clusters[layer - 1]
 
             # loop thorugh dimensions
-            write_vector_candidates = []
-            for cluster, centers in zip(profile, center_of_clusters):
-                write_vector_candidates.append(centers[cluster])
-
-        elif self.granularity == "profile_cluster":
-
-            # 2. Pick the u-matrix center of the cluster the sample belongs to
-
-            # select cluster that the sample belongs to
-            profile_cluster = self.profile_clusters[layer - 1][sample_index]
-
-            # select the center of this profile_cluster as the write_vectors
-            write_vector_candidates = self.center_of_profile_clusters[layer - 1][
-                profile_cluster
-            ]
+            write_vector_candidates = center_of_clusters[profile]
 
         return write_vector_candidates
 
@@ -392,11 +356,11 @@ class ConstructorByProfile(Constructor):
 
     def set_granularity(self, granularity):
 
-        if granularity in ["profile", "profile_cluster"]:
+        if granularity in ["profile"]:
             self.granularity = granularity
         else:
             raise Exception(
-                "Invaild granularity argument \n it must be one of [profile, profile_cluster]"
+                "Invaild granularity argument \n it must be one of [profile]"
             )
 
     def get_write_vector_candidates(self, layer, profile_index):
@@ -417,25 +381,6 @@ class ConstructorByProfile(Constructor):
             write_vector_candidates = []
             for cluster, centers in zip(profile, center_of_clusters):
                 write_vector_candidates.append(centers[cluster])
-
-        elif self.granularity == "profile_cluster":
-
-            # 2. Pick the u-matrix center of the cluster the profile belongs to
-            # pick profile
-            unique_profiles = np.unique(self.clusters[layer - 1], axis=1)
-            profile = unique_profiles[:, profile_index]
-
-            # select the cluster that the profile belongs to, by the help of the sample
-            # identify samples of that profile; this is a mask
-            members_profile = np.equal(self.clusters[layer - 1].T, profile).all(axis=1)
-
-            # pick the profile_cluster of these samples
-            profile_cluster = self.profile_clusters[layer - 1][members_profile][0]
-
-            # select the center of this profile_cluster as the write_vectors
-            write_vector_candidates = self.center_of_profile_clusters[layer - 1][
-                profile_cluster
-            ]
 
         return write_vector_candidates
 
@@ -474,86 +419,6 @@ class ConstructorByProfile(Constructor):
             unique_profiles = np.unique(self.clusters[layer - 2], axis=1)
             (target_index_next,) = np.where(
                 np.equal(unique_profiles.T, most_frequent_previous_profile).all(axis=1)
-            )
-            target_index_next = target_index_next.item()
-
-        return target_index_next
-
-
-class ConstructorByProfileCluster(Constructor):
-    def __init__(self, path, granularity="profile_cluster", show_plots=False):
-        Constructor.__init__(self, path, "profile_cluster", show_plots)
-        self.set_granularity(granularity)
-
-    def set_granularity(self, granularity):
-
-        if granularity in ["profile_cluster"]:
-            self.granularity = granularity
-        else:
-            raise Exception(
-                "Invaild granularity argument \n it must be one of [profile_cluster]"
-            )
-
-    def get_write_vector_candidates(self, layer, profile_cluster_index):
-
-        """
-        returns a set of write vectors that is used to match the read vector
-        """
-
-        # pick cluster
-        unique_profile_clusters = np.unique(self.profile_clusters[layer - 1], axis=0)
-        profile_cluster = unique_profile_clusters[profile_cluster_index]
-
-        # select the center of this profile_cluster as the write_vectors
-        write_vector_candidates = self.center_of_profile_clusters[layer - 1][
-            profile_cluster
-        ]
-
-        return write_vector_candidates
-
-    def get_corresponding_target_index(self, layer, profile_cluster_index):
-        """
-        returns the profile_index of the next reconstruction call.
-        This function defines which visualisations are used to construct the subsequent features
-        (from hidden to output direction)
-        """
-
-        if layer == 1:
-
-            # end of recursion expected
-            target_index_next = profile_cluster_index
-
-        else:
-
-            # 1. Find samples of the profile_cluster that needs to be mapped
-            # 1.2 pick profile cluster to be mapped
-            unique_profile_clusters = np.unique(
-                self.profile_clusters[layer - 1], axis=0
-            )
-            profile_cluster = unique_profile_clusters[profile_cluster_index]
-
-            # 1.3 identify samples of that profile_cluster; this is a mask
-            members_profile_cluster = (
-                self.profile_clusters[layer - 1] == profile_cluster
-            )
-
-            # 2. Find the profile_clusters of the samples in the previous layer
-            previous_profile_clusters = self.profile_clusters[layer - 2][
-                members_profile_cluster
-            ]
-
-            # 3. Pick one of these profile_cluster as the next target, by the method of majority vote:
-            values, counts = np.unique(
-                previous_profile_clusters, axis=0, return_counts=True
-            )
-            most_frequent_previous_profile_cluster = values[np.argmax(counts)]
-
-            # 4. Find the index of this profile to be passed on
-            unique_profile_clusters = np.unique(
-                self.profile_clusters[layer - 2], axis=0
-            )
-            (target_index_next,) = np.where(
-                unique_profile_clusters == most_frequent_previous_profile_cluster
             )
             target_index_next = target_index_next.item()
 

@@ -6,4 +6,3 @@ analyser.load_data(side="left")
 
 analyser.print_shapes()
 analyser.create_all_plots()
-analyser.print_profile_cluster_infos()
