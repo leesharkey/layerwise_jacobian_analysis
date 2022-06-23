@@ -1,4 +1,4 @@
-import os
+import os, sys
 import numpy as np
 from lja.analyser.plotter import Plotter
 import matplotlib.pyplot as plt
@@ -7,6 +7,7 @@ import pandas as pd
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_samples, silhouette_score
 from sklearn.cluster import SpectralClustering
+from sklearn.neighbors import kneighbors_graph
 import scipy
 
 
@@ -22,8 +23,8 @@ class Clusterer:
         self.clusters = []
         self.number_of_clusters = []
         self.number_of_layers = None
-        self.plotter = Plotter(path, show_plots)
         self.ks = []
+        self.plotter = Plotter(path, show_plots)
         self.center_of_clusters = []
 
     def load_data(self, side="left"):
@@ -73,116 +74,78 @@ class Clusterer:
 
         pass
 
-    def get_vectors(self, layer, vector_index):
+    def format_vectors(self, layer, k):
         if self.side == "left":
-            vectors = self.u_list[layer][:, :, vector_index]
+            vectors = self.u_list[layer]
+            vectors = np.transpose(
+                vectors, (0, 2, 1)
+            )  # [sample, vector_index, next_dimension]
+            vectors = vectors[:, :k, :]
+            vectors = vectors.reshape(vectors.shape[0] * vectors.shape[1], -1)
 
         elif self.side == "right":
-            vectors = self.vh[:, vector_index, :]
+            vectors = self.vh
 
         return vectors
 
-    def cluster_all_vectors(self, plot_first_n=10):
+    def format_cluster_labels(self, labels, layer, k):
+        if self.side == "left":
+            vectors = self.u_list[layer]
+            vectors = vectors[:, :, :k]
+            labels = labels.reshape(vectors.shape[0], vectors.shape[2])
+
+        elif self.side == "right":
+            vectors = self.vh
+
+        return labels
+
+    def cluster_all_vectors(self, k=5, plot=True):
         for layer in range(self.number_of_layers):
 
             print("\n\n --- Layer: ", layer)
-            clusters = []
-            number_of_clusters = []
-            centers_list = []
-            k = self.ks[layer]
 
-            for vector_index in range(k):
-                print("\nVector:", vector_index)
-                plot = vector_index < plot_first_n
+            # 1. Find number of clusters
+            vectors = vectors = self.format_vectors(layer, k)
+            n_clusters, affinity_matrix = self.find_number_of_clusters(
+                vectors, layer, plot=plot
+            )
+            self.number_of_clusters.append(n_clusters)
 
-                # 1. Find number of clusters
-                n_clusters = self.find_number_of_clusters(
-                    layer, vector_index, plot=plot
-                )
-                number_of_clusters.append(n_clusters)
+            # 2. Clustering
+            cluster_labels = self.cluster_vectors(
+                vectors, layer, affinity_matrix, n_clusters
+            )
+            self.clusters.append(self.format_cluster_labels(cluster_labels, layer, k))
 
-                # 2. Clustering
-                cluster_labels = self.cluster_vectors(layer, vector_index, n_clusters)
-                clusters.append(cluster_labels)
-
-                # 3. Compute centers
-                centers = self.get_center_of_clusters(
-                    layer, vector_index, cluster_labels, n_clusters
-                )
-                centers_list.append(centers)
-
-                # 4. Plot
-                if plot:
-                    self.plot_cluster_embedding(
-                        layer, vector_index, cluster_labels, centers
-                    )
-
-            # Store
-            self.number_of_clusters.append(number_of_clusters)
-            self.clusters.append(clusters)
-            self.center_of_clusters.append(centers_list)
+            # 3. Compute centers
+            centers = self.get_center_of_clusters(
+                vectors, layer, cluster_labels, n_clusters
+            )
+            self.center_of_clusters.append(centers)
 
         pass
 
-    def get_center_of_clusters(self, layer, vector_index, cluster_labels, n_clusters):
+    def get_center_of_clusters(self, vectors, layer, cluster_labels, n_clusters):
 
         # data
-        vectors = self.get_vectors(layer, vector_index)
         centers = []
 
         # loop thorugh clusters
         for label in range(n_clusters):
             mask = cluster_labels == label
             cluster = vectors[mask, :]
-            center = np.mean(
-                cluster, axis=0
-            )  #  mean center, maybe try trimmed mean center
+            center = np.mean(cluster, axis=0)  #  mean center
             centers.append(center)
 
         return centers
 
-    def plot_cluster_embedding(self, layer, vector_index, cluster_labels, centers):
-
-        # data
-        vectors = self.get_vectors(layer, vector_index)
-
-        # add center labels
-        text_labels = [str(item) for item in range(len(centers))]
-        text_labels = np.append(np.repeat("", len(cluster_labels)), text_labels)
-
-        # center corrdinates
-        vectors = np.append(vectors, centers, axis=0)
-        cluster_labels = np.append(cluster_labels, range(len(centers)))
-
-        # check if folder exists
-
-        # plot clusters
-        self.plotter.set_layer_and_vector(layer, vector_index)
-        self.plotter.plot_reductions(
-            vectors,
-            cluster_labels,
-            text_labels=text_labels,
-            title="U projection_clustered_" + str(vector_index),
-            file_name="U_projections_" + str(vector_index) + "_" + "clustered" + "_",
-        )
-
-        pass
-
-    def cluster_vectors(self, layer, vector_index, n_clusters, method="spectral"):
-
-        # data
-        vectors = self.get_vectors(layer, vector_index)
+    def cluster_vectors(self, vectors, layer, affinity_matrix, n_clusters):
 
         # clustering
-        if method == "kmeans":
-            clusterer = KMeans(n_clusters=n_clusters, random_state=10)
-            cluster_labels = clusterer.fit_predict(vectors)
-
-        elif method == "spectral":
-            clusterer = SpectralClustering(
-                n_clusters=n_clusters, affinity="nearest_neighbors", n_neighbors=10
-            )
-            cluster_labels = clusterer.fit_predict(vectors)
+        clusterer = SpectralClustering(
+            n_clusters=n_clusters, affinity="precomputed_nearest_neighbors",
+        )
+        cluster_labels = clusterer.fit_predict(affinity_matrix)
 
         # stats
         silhouette_avg = silhouette_score(vectors, cluster_labels)
@@ -198,24 +161,21 @@ class Clusterer:
 
     def find_number_of_clusters(
         self,
+        vectors,
         layer,
-        vector_index,
-        max_number_of_clusters=50,
-        size_of_candidate_clusters=3,
+        max_number_of_clusters=200,
+        size_of_candidate_clusters=2,
         plot=False,
     ):
 
-        # data
-        vectors = self.get_vectors(layer, vector_index)
-
         # clustering
-        clusterer = SpectralClustering(
-            n_clusters=2, affinity="nearest_neighbors", n_neighbors=10
+        connectivity = kneighbors_graph(
+            vectors, n_neighbors=50, include_self=True, n_jobs=2
         )
-        cluster_labels = clusterer.fit_predict(vectors)
+        A = 0.5 * (connectivity + connectivity.T)
 
         # eigengap heursitic
-        A = clusterer.affinity_matrix_
+
         L = scipy.sparse.csgraph.laplacian(A, normed=True).todense()
         eigenvalues, _ = np.linalg.eig(L)
         eigenvalues = eigenvalues[0:max_number_of_clusters]
@@ -241,11 +201,9 @@ class Clusterer:
                 }
             )
 
-            self.plotter.set_layer_and_vector(layer, vector_index)
+            self.plotter.set_layer_and_vector(layer)
             self.plotter.plot_scatter(
-                data,
-                title="eigengap plot: " + str(gaps_indices),
-                file_name="eigengap_" + str(vector_index) + "_",
+                data, title="eigengap plot: " + str(gaps_indices), file_name="eigengap_"
             )
 
-        return optimal_gap
+        return optimal_gap, A
