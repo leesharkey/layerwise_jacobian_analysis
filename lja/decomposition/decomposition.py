@@ -59,7 +59,7 @@ class Decomposition:
             for item, name in zip(decomposition, ["u", "s", "vh", "k"]):
                 np.save(path_layer + name + ".npy", item)
 
-    def decompose(self, k_given, side="left"):
+    def decompose(self, k_list, side="left"):
 
         # reset decompositions
         self.decompositions = []
@@ -70,7 +70,7 @@ class Decomposition:
             print("\nLayer:", layer)
 
             # obtain decomposition
-            u, s, vh, k = self.get_decomposition(T, k_given, self.side)
+            u, s, vh, k = self.get_decomposition(T, k_list[layer], self.side)
 
             # store
             self.decompositions.append((u, s, vh, k))
@@ -166,7 +166,7 @@ class Decomposition:
             U = u_stacked.reshape(T.shape[0], T.shape[1], k)
 
             # test if sorted
-            print(all(s[i] >= s[i + 1] for i in range(len(s) - 1)))
+            # print(all(s[i] >= s[i + 1] for i in range(len(s) - 1)))
 
             return U, s, vh, k
 

@@ -21,5 +21,5 @@ if False:
     decomp.get_error_function(3, [1, 2, 4, 6, 8, 10], side="left")
 
 # decompose
-decomp.decompose(500, "left")
+decomp.decompose([600, 600, 600, 10], "left")
 decomp.store()
