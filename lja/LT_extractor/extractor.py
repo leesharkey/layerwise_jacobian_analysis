@@ -24,7 +24,10 @@ class LTExtractor:
             os.makedirs(path)
 
         for i, activation in enumerate(self.activations):
-            np.save(path + "activation_" + str(i) + ".npy", activation.detach().cpu().numpy())
+            np.save(
+                path + "activation_" + str(i) + ".npy",
+                activation.detach().cpu().numpy(),
+            )
 
         for i, transformation in enumerate(self.linear_transformations):
             np.save(
@@ -88,7 +91,9 @@ class LTExtractor:
         n = x.shape[0]
         dim_input = params_ext.shape[1]
         device = params_ext.device
-        x_ext = torch.cat((x, torch.ones(n, 1, device=device)), dim=-1)  # [n, dim_input]
+        x_ext = torch.cat(
+            (x, torch.ones(n, 1, device=device)), dim=-1
+        )  # [n, dim_input]
         x_ext = x_ext[:, None, :].reshape((n, dim_input, 1))  # [n, dim_input, 1]
 
         # Claculate y_prime
