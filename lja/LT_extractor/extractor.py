@@ -21,6 +21,7 @@ class LTExtractor:
         path = self.results_path + end_path
         print("Store LT in:", path)
 
+        # loop through layer folders
         for layer in range(len(self.activations)):
 
             # create folder
@@ -39,17 +40,29 @@ class LTExtractor:
                     self.linear_transformations[layer].detach().cpu().numpy(),
                 )
 
+        # save labels
         np.save(
             path + "labels.npy", self.labels.detach().cpu().numpy(),
         )
 
     def extract(self):
+        # reset
+        self.activations = []
+        self.linear_transformations = []
+
+        # loop through all layers
         for i in range(self.net.get_depth()):
+
+            # get layer
             layer, act = self.net.get_layer_and_act(i)
             print("\n\nIndex :", i, "\nLayer:", layer, "\nAct:", act)
+
+            # obtain linear transfromations for that layer
             activation, linear_transformation = self.get_linear_transformation(
                 layer, act, self.activations[i]
             )
+
+            # store
             self.activations.append(activation)
             self.linear_transformations.append(linear_transformation)
 
