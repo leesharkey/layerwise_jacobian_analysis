@@ -1,8 +1,6 @@
 import os.path
-
 import torch
 import numpy as np
-from lja.LT_extractor.activation_derivatives import get_derivative
 
 
 class LTExtractor:
