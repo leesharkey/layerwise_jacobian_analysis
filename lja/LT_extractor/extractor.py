@@ -45,6 +45,8 @@ class LTExtractor:
             path + "labels.npy", self.labels.detach().cpu().numpy(),
         )
 
+        pass
+
     def extract(self):
         # reset
         self.activations = []
@@ -65,6 +67,8 @@ class LTExtractor:
             # store
             self.activations.append(activation)
             self.linear_transformations.append(linear_transformation)
+
+        pass
 
     def get_linear_transformation(self, layer, act, x):
 
@@ -107,6 +111,8 @@ class LTExtractor:
 
         self.compare_transformations(linear_tranformations_ext, params_ext, y_prime, y)
 
+        pass
+
     def compare_transformations(self, linear_tranformations, parameter, y_prime, y):
 
         # comaprison
@@ -127,3 +133,5 @@ class LTExtractor:
         print("Max Difference between y and y_prime::", diff.max().item())
         print("Mean Difference  between y and y_prime: %f" % diff.mean())
         print()
+
+        pass

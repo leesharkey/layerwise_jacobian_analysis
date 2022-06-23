@@ -21,7 +21,7 @@ class Decomposition:
         self.side = None
         self.labels = None
 
-    def load(self, load_path=""):
+    def load(self):
 
         # path
         path = "results/transformations/" + self.path
@@ -32,6 +32,7 @@ class Decomposition:
 
         # loop through layer folders
         for layer in range(self.number_of_layers):
+
             path_layer = path + "/Layer" + str(layer) + "/"
             self.activations.append(np.load(path_layer + "activation.npy"))
 
@@ -40,6 +41,8 @@ class Decomposition:
 
         # load labels
         self.labels = np.load(path + "labels.npy")
+
+        pass
 
     def store(self):
 
@@ -58,6 +61,8 @@ class Decomposition:
             # store
             for item, name in zip(decomposition, ["u", "s", "vh", "k"]):
                 np.save(path_layer + name + ".npy", item)
+
+        pass
 
     def decompose(self, k_list, side="left"):
 
@@ -79,6 +84,8 @@ class Decomposition:
             self.test_decomposition(
                 u, s, vh, self.activations[layer], self.activations[layer + 1], k
             )
+
+        pass
 
     def test_decomposition(self, u, s, vh, x, xp1, k):
 
@@ -249,4 +256,4 @@ class Decomposition:
             "reconstruction_accuracy",
         )
 
-        #
+        pass

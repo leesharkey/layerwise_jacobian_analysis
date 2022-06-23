@@ -92,6 +92,8 @@ class Analyser:
             U_flatten, self.labels, title="U projections", file_name="U_projections_",
         )
 
+        pass
+
     def reduce_activations(self, layer):
 
         self.plotter.set_layer_and_vector(layer)
@@ -101,6 +103,8 @@ class Analyser:
             title="Input projections",
             file_name="activation_",
         )
+
+        pass
 
     def reduce_write_vector(self, layer, vector_index):
 
@@ -115,6 +119,8 @@ class Analyser:
             file_name="U_projections_" + str(vector_index) + "_",
         )
 
+        pass
+
     def create_all_plots(self, n=10):
 
         for layer in range(self.number_of_layers):
@@ -125,6 +131,8 @@ class Analyser:
             for vector_index in range(n):
                 self.reduce_write_vector(layer, vector_index)
 
+        pass
+
     def print_shapes(self):
 
         print("\nSide:", self.side)
@@ -134,6 +142,8 @@ class Analyser:
             print("Input:", self.activation_list[layer].shape)
             print("Read Vectors:", self.vh_list[layer].shape)
             print("Write Vectors:", self.u_list[layer].shape)
+
+        pass
 
     def print_profile_cluster_infos(self):
 
@@ -165,4 +175,4 @@ class Analyser:
                 print("Most Frequent labels:\t", most_frequent)
                 print("Frequencies:\t\t", np.sort(counts))
 
-    # TODO: the same function for profiles
+        pass

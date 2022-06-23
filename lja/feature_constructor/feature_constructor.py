@@ -137,6 +137,8 @@ class Constructor:
             self.get_file_name(feature_index, target_index, "file"), feature,
         )
 
+        pass
+
     def plot_feature(self, feature, layer, feature_index, target_index):
         """
         PLots the feature as heat-map
@@ -156,6 +158,8 @@ class Constructor:
             + str(target_index),
             file_name=self.get_file_name(feature_index, target_index, "plot"),
         )
+
+        pass
 
     def construct_single_feature(
         self,
@@ -313,6 +317,8 @@ class ConstructorBySample(Constructor):
                 "Invaild granularity argument \n it must be one of [sample, profile"
             )
 
+        pass
+
     def get_write_vector_candidates(self, layer, sample_index):
         """
         returns a set of write vectors that is used to match the read vector
@@ -362,6 +368,8 @@ class ConstructorByProfile(Constructor):
             raise Exception(
                 "Invaild granularity argument \n it must be one of [profile]"
             )
+
+        pass
 
     def get_write_vector_candidates(self, layer, profile_index):
         """

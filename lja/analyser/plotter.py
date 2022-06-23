@@ -34,10 +34,14 @@ class Plotter:
         if not os.path.exists(self.path):
             os.makedirs(self.path)
 
+        pass
+
     def set_layer_and_vector(self, layer, vector_number=None):
         self.layer = layer
         self.vector_number = vector_number
         self.set_path()
+
+        pass
 
     def present_image(self, title, filename):
         plt.title(title)
@@ -49,12 +53,16 @@ class Plotter:
         if self.show_plots:
             plt.show()
 
+        pass
+
     def plot_image(self, image, title="", filename=None, aspect="auto"):
 
         plt.clf()
         plt.imshow(image, aspect=aspect)
         plt.colorbar()
         self.present_image(title, filename)
+
+        pass
 
     def plot_scatter(self, data, title="", filename=None):
 
@@ -77,6 +85,8 @@ class Plotter:
                 plt.text(row["x"], row["y"], row["text_labels"])
 
         self.present_image(title, filename)
+
+        pass
 
     def plot_reduction(
         self, type, M, labels, text_labels=None, title="", filename="test"
@@ -114,6 +124,8 @@ class Plotter:
 
         self.plot_scatter(data, title, filename)
 
+        pass
+
     def plot_reductions(self, M, labels, text_labels=None, title="", filename="test"):
 
         # t-SNE plot
@@ -121,6 +133,8 @@ class Plotter:
 
         # PCA
         # self.plot_reduction("PCA", M, labels, x, title, filename)
+
+        pass
 
     def plot_line_plot(self, x, y, title, ylabel, xlabel, filename):
 
@@ -134,3 +148,5 @@ class Plotter:
         plt.xticks(x)
 
         self.present_image(title, filename)
+
+        pass
