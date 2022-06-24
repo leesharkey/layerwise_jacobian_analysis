@@ -10,6 +10,7 @@ class LTExtractor:
         super(LTExtractor, self).__init__()
 
         self.net = net
+        self.x0 = x0
         self.activations = [x0]
         self.linear_transformations = []
         self.results_path = "results/transformations/"
@@ -49,7 +50,7 @@ class LTExtractor:
 
     def extract(self):
         # reset
-        self.activations = []
+        self.activations = [self.x0]
         self.linear_transformations = []
 
         # loop through all layers

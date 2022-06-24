@@ -11,7 +11,7 @@ net_device = manager.net.device
 # select n-samples of each of the 10 different classes
 labels = manager.test_dataset.targets
 indices = []
-n = 10
+n = 100
 for i in range(10):
     index = (labels == i).nonzero(as_tuple=True)[0][0:n]
     indices += index.tolist()

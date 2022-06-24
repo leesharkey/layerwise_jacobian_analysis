@@ -51,10 +51,10 @@ class Decomposition:
         print("\nStore in: ", path)
 
         # loop through layers
-        for i, decomposition in enumerate(self.decompositions):
+        for layer, decomposition in enumerate(self.decompositions):
 
             # create folder
-            path_layer = path + "Layer" + str(i) + "/"
+            path_layer = path + "Layer" + str(layer) + "/"
             if not os.path.exists(path_layer):
                 os.makedirs(path_layer)
 
