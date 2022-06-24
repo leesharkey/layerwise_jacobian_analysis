@@ -95,10 +95,10 @@ class Analyser:
 
         pass
 
-    def reduce_write_matrix(self, layer):
+    def reduce_write_matrix(self, layer, k):
 
         # data
-        U = self.u_list[layer]
+        U = self.u_list[layer][:, :, :k]
         U_flatten = U.reshape(U.shape[0], U.shape[1] * U.shape[2])
 
         self.plotter.set_layer_and_vector(layer)
@@ -123,11 +123,14 @@ class Analyser:
 
         pass
 
-    def create_all_reduction_plots(self, n=10):
+    def create_all_reduction_plots(self, k_per_layer=None, n=10):
+
+        if k_per_layer is None:
+            k_per_layer = self.k_list
 
         for layer in range(self.number_of_layers):
             print("\nLayer:", layer)
-            self.reduce_write_matrix(layer)
+            self.reduce_write_matrix(layer, k_per_layer[layer])
             self.reduce_activations(layer)
 
             for vector_index in range(n):
@@ -171,16 +174,16 @@ class Analyser:
         )
         pass
 
-    def test_all_decompositions(self, custom_ks=None):
+    def test_all_decompositions(self, k_per_layer=None):
 
         for layer in range(self.number_of_layers):
 
             print("\nLayer:", layer)
 
-            if custom_ks is None:
+            if k_per_layer is None:
                 k = self.k_list[layer]
             else:
-                k = custom_ks[layer]
+                k = k_per_layer[layer]
 
             self.test_decomposition(layer, k)
 
