@@ -16,62 +16,63 @@ class Clusterer:
 
     def __init__(self, path, show_plots=False):
         super(Clusterer, self).__init__()
+
+        self.plotter = Plotter(path, show_plots)
         self.path = path
-        self.side = None
+
         self.u_list = []
         self.vh_list = []
         self.clusters = []
-        self.number_of_clusters = []
-        self.number_of_layers = None
         self.ks = []
-        self.plotter = Plotter(path, show_plots)
-        self.center_of_clusters = []
 
-    def load_data(self, side="left"):
-        # config
-        self.side = side
+        self.number_of_layers = None
+        self.side = None
+        self.labels = None
+
+    def load(self, side="left"):
 
         # Set path to decompositions
-        path_folder = "results/decompositions/" + self.path + self.side
-        print("Load decompositions from: ", path_folder)
+        path = "results/decompositions/" + self.path + side
+        print("Load decompositions from: ", path)
 
-        # Load decompsitions
-        self.number_of_layers = len(next(os.walk(path_folder))[1])
+        # config
+        self.side = side
+        self.number_of_layers = len(next(os.walk(path))[1])
+
+        # loop through layer folders
         for layer in range(self.number_of_layers):
-            path = path_folder + "/Layer" + str(layer) + "/"
+
+            path_layer = path + "/Layer" + str(layer) + "/"
 
             if self.side == "left":
-                self.u_list.append(np.load(os.path.join(path, "u.npy")))
-                self.ks.append(self.u_list[0].shape[2])
+                self.u_list.append(np.load(path_layer + "u.npy"))
 
             elif self.side == "right":
-                self.vh_list.append(np.load(os.path.join(path, "vh.npy")))
-                self.ks.append(self.vh_list[0].shape[2])
+                self.vh_list.append(np.load(path_layer + "vh.npy"))
+
+            self.ks.append(np.load(path_layer + "k.npy").item())
 
         pass
 
     def store(self):
+
         # Set path to decompositions
-        path_folder = "results/decompositions/" + self.path + self.side
-        print("\nStore in: ", path_folder)
+        path = "results/clusters/" + self.path + self.side + "/"
+        print("\nStore in: ", path)
 
-        # layers, vectors, num_clusters, 1024
-        # Store clusters
-        for layer in range(self.number_of_layers):
-            newpath = path_folder + "/Layer" + str(layer) + "/"
+        # loop through layers
+        for layer, clusters in enumerate(self.clusters):
 
-            # (1)
-            np.save(newpath + "number_of_clusters.npy", self.number_of_clusters[layer])
+            # create folder
+            path_layer = path + "Layer" + str(layer) + "/"
+            if not os.path.exists(path_layer):
+                os.makedirs(path_layer)
 
-            # (k, n)
-            np.save(newpath + "clusters.npy", self.clusters[layer])
-
-            # (k, n, dim)
-            np.save(
-                newpath + "center_of_clusters.npy",
-                np.array(self.center_of_clusters[layer], dtype=object),
-            )
-
+            # store
+            for item, name in zip(
+                clusters, ["number_of_clusters", "clusters", "center_of_clusters"]
+            ):
+                np.save(path_layer + name + ".npy", item)
         pass
 
     def format_vectors(self, layer, k):
@@ -99,31 +100,58 @@ class Clusterer:
 
         return labels
 
-    def cluster_all_vectors(self, k=5, plot=True):
-        for layer in range(self.number_of_layers):
+    def cluster_all_layers(
+        self, k=5, plot=True, n_neighbors=10, number_of_clusters=None
+    ):
 
-            print("\n\n --- Layer: ", layer)
+        # reset
+        self.clusters = []
 
-            # 1. Find number of clusters
-            vectors = vectors = self.format_vectors(layer, k)
-            n_clusters, affinity_matrix = self.find_number_of_clusters(
-                vectors, layer, plot=plot
+        for layer in range(self.number_of_layers - 1):
+
+            # 1. Cluster
+            if (number_of_clusters is not None) and (layer < len(number_of_clusters)):
+                n_clusters = number_of_clusters[layer]
+            else:
+                n_clusters = None
+
+            n_clusters, cluster_labels_formatted, centers = self.cluster_one_layer(
+                layer, k, plot, n_neighbors, n_clusters
             )
-            self.number_of_clusters.append(n_clusters)
 
-            # 2. Clustering
-            cluster_labels = self.cluster_vectors(
-                vectors, layer, affinity_matrix, n_clusters
-            )
-            self.clusters.append(self.format_cluster_labels(cluster_labels, layer, k))
-
-            # 3. Compute centers
-            centers = self.get_center_of_clusters(
-                vectors, layer, cluster_labels, n_clusters
-            )
-            self.center_of_clusters.append(centers)
+            # 2. Store
+            self.clusters.append((n_clusters, cluster_labels_formatted, centers))
 
         pass
+
+    def cluster_one_layer(
+        self, layer, k=5, plot=True, n_neighbors=10, number_of_clusters=None
+    ):
+
+        print("\n\n --- Layer: ", layer)
+
+        # 1. Find number of clusters
+        vectors = self.format_vectors(layer, k)
+        n_clusters, affinity_matrix = self.find_number_of_clusters(
+            vectors, layer, plot=plot, n_neighbors=n_neighbors
+        )
+
+        # use custom number of clusters
+        if number_of_clusters is not None:
+            n_clusters = number_of_clusters
+
+        # 2. Clustering
+        cluster_labels = self.cluster_vectors(
+            vectors, layer, affinity_matrix, n_clusters
+        )
+        cluster_labels_formatted = self.format_cluster_labels(cluster_labels, layer, k)
+
+        # 3. Compute centers
+        centers = self.get_center_of_clusters(
+            vectors, layer, cluster_labels, n_clusters
+        )
+
+        return n_clusters, cluster_labels_formatted, centers
 
     def get_center_of_clusters(self, vectors, layer, cluster_labels, n_clusters):
 
@@ -163,14 +191,16 @@ class Clusterer:
         self,
         vectors,
         layer,
-        max_number_of_clusters=200,
+        max_number_of_clusters=50,
         size_of_candidate_clusters=2,
         plot=False,
+        n_neighbors=10,
     ):
 
         # clustering
+        print("Start constructing nn-grpah")
         connectivity = kneighbors_graph(
-            vectors, n_neighbors=50, include_self=True, n_jobs=2
+            vectors, n_neighbors=n_neighbors, include_self=True, n_jobs=6
         )
         A = 0.5 * (connectivity + connectivity.T)
 
@@ -190,6 +220,8 @@ class Clusterer:
         gaps_indices = np.sort(gaps_indices[:size_of_candidate_clusters])
         optimal_gap = gaps_indices[0]
 
+        print("Finished constructing nn-grpah")
+
         # data for plotting the first n
         if plot:
             data = pd.DataFrame(
@@ -203,7 +235,7 @@ class Clusterer:
 
             self.plotter.set_layer_and_vector(layer)
             self.plotter.plot_scatter(
-                data, title="eigengap plot: " + str(gaps_indices), file_name="eigengap_"
+                data, title="eigengap plot: " + str(gaps_indices), filename="eigengap_"
             )
 
         return optimal_gap, A
