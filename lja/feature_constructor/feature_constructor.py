@@ -1,6 +1,7 @@
 import os
 import numpy as np
 from lja.analyser.plotter import Plotter
+from lja.analyser.dataloader import Dataloader
 import matplotlib.pyplot as plt
 import pandas as pd
 import itertools
@@ -14,72 +15,30 @@ class Constructor:
 
         self.path = path
         self.plotter = Plotter("/features/" + path, show_plots)
-
-        # sample level
-        self.u_list = []
-        self.vh_list = []
-        self.activation_list = []
-        self.ks = []
-
-        # clusters
-        self.clusters = []
-
+        self.data = Dataloader(path)
         self.number_of_layers = None
         self.side = None
-        self.labels = None
-
         self.target = target
 
     def load(self, side="left"):
 
-        # ----  Set path to decompositions
-        path = "results/decompositions/" + self.path + side
-        print("Load decompositions from: ", path)
+        # load transformations and decompositions
+        self.side, self.number_of_layers = self.data.load(side, load_cluster=True)
 
-        # config
-        self.side = side
-        self.number_of_layers = len(next(os.walk(path))[1])
-
-        for layer in range(self.number_of_layers):
-
-            path_layer = path + "/Layer" + str(layer) + "/"
-
-            # read and write vectors
-            self.u_list.append(np.load(path_layer + "u.npy"))
-            self.vh_list.append(np.load(path_layer + "vh.npy"))
-
-            self.ks.append(np.load(path_layer + "k.npy").item())
-
-        # ----  Set path to transformations
-        path = "results/transformations/" + self.path
-        self.labels = np.load(path + "labels.npy")
-
-        # load activations
-        for layer in range(self.number_of_layers):
-
-            path_layer = path + "/Layer" + str(layer) + "/"
-
-            # load activations
-            self.activation_list.append(np.load(path_layer + "activation.npy"))
-
-        # ---- Set path to clusters
-        path = "results/clusters/" + self.path + side
-
-        # load clusters
-        for layer in range(self.number_of_layers):
-
-            path_layer = path + "/Layer" + str(layer) + "/"
-
-            # load activations
-            self.clusters.append(
-                (
-                    np.load(path_layer + "number_of_clusters.npy"),
-                    np.load(path_layer + "clusters.npy"),
-                    np.load(path_layer + "center_of_clusters.npy"),
-                )
-            )
+        self.u_list = self.data.u_list
+        self.vh_list = self.data.vh_list
+        self.k_list = self.data.k_list
 
         pass
+
+    def set_k_per_layer(self, k_per_layer):
+
+        self.k_list = k_per_layer
+
+        for layer in range(self.number_of_layers):
+            k = self.k_list[layer]
+            self.u_list.append(self.data.u_list[layer][:, :, :k])
+            self.vh_list.append(self.data.vh_list[layer][:k, :])
 
     def set_plot_path(self, layer, feature_index):
         self.plotter.set_layer_and_vector(layer, feature_index)
@@ -352,7 +311,7 @@ class ConstructorBySample(Constructor):
             # 2. Pick the u-vector center the sample belongs to for each dimension seperately
 
             # pick the profile the sample belongs to
-            (cluster_n, cluster_labels, cluster_centers) = self.clusters[layer - 1]
+            (cluster_n, cluster_labels, cluster_centers) = self.data.clusters[layer - 1]
             profile = cluster_labels[sample_index, :]
 
             # pick the profle centers in the U vector space of the profile
@@ -395,7 +354,7 @@ class ConstructorByProfile(Constructor):
         if self.granularity == "profile":
 
             # pick profile
-            (cluster_n, cluster_labels, cluster_centers) = self.clusters[layer - 1]
+            (cluster_n, cluster_labels, cluster_centers) = self.data.clusters[layer - 1]
             unique_profiles = np.unique(cluster_labels, axis=0)
             profile = unique_profiles[profile_index, :]
 
@@ -421,7 +380,7 @@ class ConstructorByProfile(Constructor):
 
             # 1. Find samples of the profile that needs to be mapped
             # 1.2 pick profile to be mapped
-            (cluster_n, cluster_labels, cluster_centers) = self.clusters[layer - 1]
+            (cluster_n, cluster_labels, cluster_centers) = self.data.clusters[layer - 1]
 
             unique_profiles = np.unique(cluster_labels, axis=0)
             profile = unique_profiles[profile_index, :]
@@ -430,7 +389,7 @@ class ConstructorByProfile(Constructor):
             members_profile = np.equal(cluster_labels, profile).all(axis=1)
 
             # 2. Find the profiles of the samples in the previous layer
-            (cluster_n, cluster_labels, cluster_centers) = self.clusters[layer - 2]
+            (cluster_n, cluster_labels, cluster_centers) = self.data.clusters[layer - 2]
             previous_profiles = cluster_labels[members_profile, :]
 
             # 3. Pick one of these profiles as the next target, by the method of majority vote:

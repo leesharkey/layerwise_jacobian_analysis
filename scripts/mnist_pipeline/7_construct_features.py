@@ -7,10 +7,11 @@ from lja.feature_constructor.feature_constructor import (
 if True:
     constructor = ConstructorBySample(path="mnist/dropout/", show_plots=False)
     constructor.load()
+    constructor.set_k_per_layer([100, 100, 100, 10])
     constructor.set_granularity("sample")
 
     constructor.construct_multiple_features(
-        layers=[1, 2, 3],
+        layers=[0, 1, 2, 3],
         feature_indices=[0, 1],
         target_indices=[0, 1, 101, 102, 201, 202, 901, 902],
         granularites=["sample"],

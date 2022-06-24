@@ -46,6 +46,11 @@ class LTExtractor:
             path + "labels.npy", self.labels.detach().cpu().numpy(),
         )
 
+        # save number of layers
+        np.save(
+            path + "number_of_layers.npy", len(self.linear_transformations),
+        )
+
         pass
 
     def extract(self):

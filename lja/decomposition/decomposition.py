@@ -4,6 +4,7 @@ from sklearn.utils import extmath
 import warnings
 import matplotlib.pyplot as plt
 from lja.analyser.plotter import Plotter
+from lja.analyser.dataloader import Dataloader
 
 
 class Decomposition:
@@ -13,33 +14,17 @@ class Decomposition:
         super(Decomposition, self).__init__()
 
         self.path = path
-        self.transformations = []
-        self.activations = []
-        self.decompositions = []
+        self.data = Dataloader(path)
         self.number_of_layers = None
         self.side = None
-        self.labels = None
+        self.decompositions = []
 
     def load(self):
 
-        # path
-        path = "results/transformations/" + self.path
-        print("Load from: ", path)
-
-        # config
-        self.number_of_layers = len(next(os.walk(path))[1])
-
-        # loop through layer folders
-        for layer in range(self.number_of_layers):
-
-            path_layer = path + "/Layer" + str(layer) + "/"
-            self.activations.append(np.load(path_layer + "activation.npy"))
-
-            if layer < self.number_of_layers - 1:
-                self.transformations.append(np.load(path_layer + "transformation.npy"))
-
-        # load labels
-        self.labels = np.load(path + "labels.npy")
+        # load transformations and decompositions
+        side, self.number_of_layers = self.data.load(
+            load_transformations=True, load_decompositions=False, load_cluster=False,
+        )
 
         pass
 
@@ -70,7 +55,7 @@ class Decomposition:
         self.side = side
 
         # loop through layers
-        for layer, T in enumerate(self.transformations):
+        for layer, T in enumerate(self.data.transformation_list):
             print("\nLayer:", layer)
 
             # obtain decomposition
@@ -78,11 +63,6 @@ class Decomposition:
 
             # store
             self.decompositions.append((u, s, vh, k))
-
-            # test
-            self.test_decomposition(
-                u, s, vh, self.activations[layer], self.activations[layer + 1], k
-            )
 
         pass
 
@@ -142,10 +122,12 @@ class Decomposition:
         # config
         self.side = side
 
-        if layer >= len(self.transformations):
+        if layer >= len(self.data.transformation_list):
             raise Exception("Decomposition: invalid layer index")
 
         else:
-            u, s, vh, k = self.get_decomposition(self.transformations[layer], k, side)
+            u, s, vh, k = self.get_decomposition(
+                self.data.transformation_list[layer], k, side
+            )
 
             return u, s, vh, k

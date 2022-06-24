@@ -1,6 +1,7 @@
 import glob, os
 import numpy as np
 from lja.analyser.plotter import Plotter
+from lja.analyser.dataloader import Dataloader
 import scipy.stats as stats
 import math
 from scipy.spatial import distance_matrix
@@ -15,71 +16,16 @@ class Analyser:
 
         self.path = path
         self.plotter = Plotter(path, show_plots)
-
-        # sample level
-        self.u_list = []
-        self.vh_list = []
-        self.s_list = []
-        self.activation_list = []
-        self.k_list = []
-
-        # clusters
-        self.clusters = []
-
+        self.data = Dataloader(path)
         self.number_of_layers = None
         self.side = None
-        self.labels = None
 
     def load(self, side="left", load_cluster=False):
 
-        # ----  Set path to decompositions
-        path = "results/decompositions/" + self.path + side
-        print("Load decompositions from: ", path)
-
-        # config
-        self.side = side
-        self.number_of_layers = len(next(os.walk(path))[1])
-
-        for layer in range(self.number_of_layers):
-
-            path_layer = path + "/Layer" + str(layer) + "/"
-
-            # read and write vectors
-            self.u_list.append(np.load(path_layer + "u.npy"))
-            self.vh_list.append(np.load(path_layer + "vh.npy"))
-            self.s_list.append(np.load(path_layer + "s.npy"))
-
-            self.k_list.append(np.load(path_layer + "k.npy").item())
-
-        # ----  Set path to transformations
-        path = "results/transformations/" + self.path
-        self.labels = np.load(path + "labels.npy")
-
-        # load activations
-        for layer in range(self.number_of_layers + 1):
-
-            path_layer = path + "/Layer" + str(layer) + "/"
-
-            # load activations
-            self.activation_list.append(np.load(path_layer + "activation.npy"))
-
-        # ---- Set path to clusters
-        if load_cluster:
-            path = "results/clusters/" + self.path + side
-
-            # load clusters
-            for layer in range(self.number_of_layers):
-
-                path_layer = path + "/Layer" + str(layer) + "/"
-
-                # load activations
-                self.clusters.append(
-                    (
-                        np.load(path_layer + "number_of_clusters.npy"),
-                        np.load(path_layer + "clusters.npy"),
-                        np.load(path_layer + "center_of_clusters.npy"),
-                    )
-                )
+        # load transformations and decompositions
+        self.side, self.number_of_layers = self.data.load(
+            side, load_cluster=load_cluster
+        )
 
         pass
 
@@ -87,8 +33,8 @@ class Analyser:
 
         self.plotter.set_layer_and_vector(layer)
         self.plotter.plot_reductions(
-            self.activation_list[layer],
-            self.labels,
+            self.data.activation_list[layer],
+            self.data.labels,
             title="Input projections",
             filename="activation_",
         )
@@ -98,12 +44,15 @@ class Analyser:
     def reduce_write_matrix(self, layer, k):
 
         # data
-        U = self.u_list[layer][:, :, :k]
+        U = self.data.u_list[layer][:, :, :k]
         U_flatten = U.reshape(U.shape[0], U.shape[1] * U.shape[2])
 
         self.plotter.set_layer_and_vector(layer)
         self.plotter.plot_reductions(
-            U_flatten, self.labels, title="U projections", filename="U_projections_",
+            U_flatten,
+            self.data.labels,
+            title="U projections",
+            filename="U_projections_",
         )
 
         pass
@@ -111,12 +60,12 @@ class Analyser:
     def reduce_write_vector(self, layer, vector_index):
 
         # data
-        U = self.u_list[layer][:, :, vector_index]
+        U = self.data.u_list[layer][:, :, vector_index]
 
         self.plotter.set_layer_and_vector(layer, vector_index)
         self.plotter.plot_reductions(
             U,
-            self.labels,
+            self.data.labels,
             title="U projection_" + str(vector_index),
             filename="U_projections_" + str(vector_index) + "_",
         )
@@ -126,7 +75,7 @@ class Analyser:
     def create_all_reduction_plots(self, k_per_layer=None, n=10):
 
         if k_per_layer is None:
-            k_per_layer = self.k_list
+            k_per_layer = self.data.k_list
 
         for layer in range(self.number_of_layers):
             print("\nLayer:", layer)
@@ -144,9 +93,9 @@ class Analyser:
         for layer in range(self.number_of_layers):
 
             print("\nLayer:", layer)
-            print("Input:", self.activation_list[layer].shape)
-            print("Read Vectors:", self.vh_list[layer].shape)
-            print("Write Vectors:", self.u_list[layer].shape)
+            print("Input:", self.data.activation_list[layer].shape)
+            print("Read Vectors:", self.data.vh_list[layer].shape)
+            print("Write Vectors:", self.data.u_list[layer].shape)
 
         pass
 
@@ -161,7 +110,7 @@ class Analyser:
 
     def create_singluarvalue_plot(self, layer):
 
-        singular_values = self.s_list[layer]
+        singular_values = self.data.s_list[layer]
 
         self.plotter.set_layer_and_vector(layer)
         self.plotter.plot_line_plot(
@@ -181,7 +130,7 @@ class Analyser:
             print("\nLayer:", layer)
 
             if k_per_layer is None:
-                k = self.k_list[layer]
+                k = self.data.k_list[layer]
             else:
                 k = k_per_layer[layer]
 
@@ -190,11 +139,11 @@ class Analyser:
     def test_decomposition(self, layer, k):
 
         # declare
-        u = self.u_list[layer]
-        s = self.s_list[layer]
-        vh = self.vh_list[layer]
-        x = self.activation_list[layer]
-        xp1 = self.activation_list[layer + 1]
+        u = self.data.u_list[layer]
+        s = self.data.s_list[layer]
+        vh = self.data.vh_list[layer]
+        x = self.data.activation_list[layer]
+        xp1 = self.data.activation_list[layer + 1]
 
         # truncuate
         if self.side == "left":
@@ -267,7 +216,7 @@ class Analyser:
 
         for layer in range(self.number_of_layers):
 
-            k_range = np.linspace(1, self.k_list[layer], 10).astype(int)
+            k_range = np.linspace(1, self.data.k_list[layer], 10).astype(int)
             self.create_reconstrcution_error_plot(layer, k_range)
 
     def create_reconstrcution_error_plot(self, layer, k_range):
@@ -314,7 +263,7 @@ class Analyser:
 
     def create_cluster_plot(self, layer):
 
-        (cluster_n, cluster_labels, cluster_centers) = self.clusters[layer]
+        (cluster_n, cluster_labels, cluster_centers) = self.data.clusters[layer]
 
         self.plotter.plot_image(cluster_labels, title="", filename=None, aspect="auto")
 
@@ -325,7 +274,7 @@ class Analyser:
         for layer in range(self.number_of_layers):
 
             #  cluster infos
-            (cluster_n, cluster_labels, cluster_centers) = self.clusters[layer]
+            (cluster_n, cluster_labels, cluster_centers) = self.data.clusters[layer]
             sizes = []
 
             for cluster in range(cluster_n):
