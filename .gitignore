@@ -1,7 +1,7 @@
 data/mnist
 results/*/mnist
-plots/mnist
 results/*/archive
+plots/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
