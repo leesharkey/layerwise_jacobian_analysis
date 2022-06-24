@@ -136,7 +136,7 @@ class Plotter:
 
         pass
 
-    def plot_line_plot(self, x, y, title, ylabel, xlabel, filename):
+    def plot_line_plot(self, x, y, title, ylabel, xlabel, filename, xticks=None):
 
         # plot
         plt.close("all")
@@ -145,7 +145,8 @@ class Plotter:
         # design
         plt.ylabel(ylabel)
         plt.xlabel(xlabel)
-        plt.xticks(x)
+        if xticks is not None:
+            plt.xticks(x)
 
         self.present_image(title, filename)
 

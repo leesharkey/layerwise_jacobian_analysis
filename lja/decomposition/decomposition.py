@@ -12,7 +12,6 @@ class Decomposition:
     def __init__(self, path, show_plots=False):
         super(Decomposition, self).__init__()
 
-        self.plotter = Plotter(path, show_plots)
         self.path = path
         self.transformations = []
         self.activations = []
@@ -87,65 +86,6 @@ class Decomposition:
 
         pass
 
-    def test_decomposition(self, u, s, vh, x, xp1, k):
-
-        print(
-            "Stacked side:\t",
-            self.side,
-            "\nK:\t\t",
-            k,
-            "\nSize of u:\t",
-            u.shape,
-            "\nSize of s\t",
-            s.shape,
-            "\nSize of vh\t",
-            vh.shape,
-        )
-
-        # deviation tolerance
-        tol = 1e-3
-
-        if self.side == "left":
-            U = u
-
-            # 1. What is read:
-            x_ext = np.insert(x, x.shape[1], 1, axis=1)
-            read_in = vh @ x_ext.T
-
-            # 2. Scale
-            read_in_scaled = np.diag(s) @ read_in
-
-            # 3. Write to ouput
-            t = U @ read_in_scaled
-            xp1_hat = t[range(t.shape[0]), :, range(t.shape[0])]
-
-        elif self.side == "right":
-            VH = vh
-
-            # 1. What is read:
-            x_ext = np.insert(x, x.shape[1], 1, axis=1)
-            read_ins = VH @ x_ext.T
-
-            # pick first column of first read_in and so on
-            read_in = np.transpose(
-                read_ins[range(read_ins.shape[0]), :, range(read_ins.shape[0])]
-            )
-
-            # 2. Scale
-            read_in_scaled = np.diag(s) @ read_in
-
-            # 3. Write to output
-            xp1_hat = np.transpose(u @ read_in_scaled)
-
-        # 4. Compare to actual output
-        acc = np.sum(np.isclose(xp1_hat, xp1, atol=tol)) / xp1_hat.size
-        error = np.mean(np.abs(xp1_hat - xp1))
-
-        print(f"Reconstruction accuracy (tol={tol}):", acc)
-        print("Reconstruction AbsError:", error)
-
-        return acc, error
-
     def get_decomposition(self, T, k, side):
 
         if side == "left":
@@ -197,7 +137,7 @@ class Decomposition:
         else:
             raise Exception("Decomposition: invalid side")
 
-    def get_decomposition_by_layer_index(self, layer, k, side="left", test=False):
+    def get_decomposition_by_layer_index(self, layer, k, side="left"):
 
         # config
         self.side = side
@@ -208,52 +148,4 @@ class Decomposition:
         else:
             u, s, vh, k = self.get_decomposition(self.transformations[layer], k, side)
 
-            # test
-            if test:
-                self.test_decomposition(
-                    u, s, vh, self.activations[layer], self.activations[layer + 1], k
-                )
-
             return u, s, vh, k
-
-    def get_error_function(self, layer, k_range, side="left"):
-
-        # memory
-        errors = []
-        accuracies = []
-
-        for k in k_range:
-
-            print("\n-- K:", k)
-
-            # obtain decomposition
-            u, s, vh, k = self.get_decomposition_by_layer_index(layer, k, side="left")
-
-            acc, error = self.test_decomposition(
-                u, s, vh, self.activations[layer], self.activations[layer + 1], k
-            )
-
-            # store
-            errors.append(error)
-            accuracies.append(acc)
-
-        # plot
-        self.plotter.set_layer_and_vector(layer)
-        self.plotter.plot_line_plot(
-            k_range,
-            errors,
-            "Mean absolute error",
-            "MAE",
-            "Number of components",
-            "reconstruction_error",
-        )
-        self.plotter.plot_line_plot(
-            k_range,
-            accuracies,
-            "Reconstruction Accuracy",
-            "Accuracy",
-            "Number of components",
-            "reconstruction_accuracy",
-        )
-
-        pass

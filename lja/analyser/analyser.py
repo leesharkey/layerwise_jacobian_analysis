@@ -12,72 +12,86 @@ class Analyser:
 
     def __init__(self, path, show_plots=False):
         super(Analyser, self).__init__()
+
         self.path = path
         self.plotter = Plotter(path, show_plots)
-
-        self.side = None
-        self.number_of_layers = None
 
         # sample level
         self.u_list = []
         self.vh_list = []
-        self.labels = None
+        self.s_list = []
         self.activation_list = []
+        self.k_list = []
 
-        # profile level
-        self.number_of_clusters = []
+        # clusters
         self.clusters = []
 
-        # profile cluster level
-        self.number_of_profile_clusters = []
-        self.profile_clusters = []
+        self.number_of_layers = None
+        self.side = None
+        self.labels = None
 
-    def load_data(self, side="left"):
+    def load(self, side="left", load_cluster=False):
+
+        # ----  Set path to decompositions
+        path = "results/decompositions/" + self.path + side
+        print("Load decompositions from: ", path)
 
         # config
         self.side = side
+        self.number_of_layers = len(next(os.walk(path))[1])
 
-        # Set path to decompositions
-        path_folder = "results/decompositions/" + self.path + self.side
-        print("Load decompositions from: ", path_folder)
-
-        # Load decompsitions
-        self.number_of_layers = len(next(os.walk(path_folder))[1])
         for layer in range(self.number_of_layers):
-            path = path_folder + "/Layer" + str(layer) + "/"
+
+            path_layer = path + "/Layer" + str(layer) + "/"
 
             # read and write vectors
-            self.u_list.append(np.load(os.path.join(path, "u.npy")))
-            self.vh_list.append(np.load(os.path.join(path, "vh.npy")))
+            self.u_list.append(np.load(path_layer + "u.npy"))
+            self.vh_list.append(np.load(path_layer + "vh.npy"))
+            self.s_list.append(np.load(path_layer + "s.npy"))
 
-            # clusters of write vectors
-            self.clusters.append(
-                np.load(os.path.join(path, "clusters.npy"), allow_pickle=True)
-            )
-            self.number_of_clusters.append(
-                np.load(os.path.join(path, "number_of_clusters.npy"))
-            )
+            self.k_list.append(np.load(path_layer + "k.npy").item())
 
-            # clusters of profiles
-            self.profile_clusters.append(
-                np.load(os.path.join(path, "profile_clusters.npy"), allow_pickle=True)
-            )
-            self.number_of_profile_clusters.append(
-                np.load(
-                    os.path.join(path, "number_of_profile_clusters.npy"),
-                    allow_pickle=True,
-                )
-            )
-
-        # load class labels
+        # ----  Set path to transformations
         path = "results/transformations/" + self.path
-        self.labels = np.load(os.path.join(path, "labels.npy"))
+        self.labels = np.load(path + "labels.npy")
 
         # load activations
-        for layer in range(self.number_of_layers):
-            self.activation_list.append(
-                np.load(os.path.join(path, "activation_" + str(layer) + ".npy"))
-            )
+        for layer in range(self.number_of_layers + 1):
+
+            path_layer = path + "/Layer" + str(layer) + "/"
+
+            # load activations
+            self.activation_list.append(np.load(path_layer + "activation.npy"))
+
+        # ---- Set path to clusters
+        if load_cluster:
+            path = "results/clusters/" + self.path + side
+
+            # load clusters
+            for layer in range(self.number_of_layers):
+
+                path_layer = path + "/Layer" + str(layer) + "/"
+
+                # load activations
+                self.clusters.append(
+                    (
+                        np.load(path_layer + "number_of_clusters.npy"),
+                        np.load(path_layer + "clusters.npy"),
+                        np.load(path_layer + "center_of_clusters.npy"),
+                    )
+                )
+
+        pass
+
+    def reduce_activations(self, layer):
+
+        self.plotter.set_layer_and_vector(layer)
+        self.plotter.plot_reductions(
+            self.activation_list[layer],
+            self.labels,
+            title="Input projections",
+            filename="activation_",
+        )
 
         pass
 
@@ -89,19 +103,7 @@ class Analyser:
 
         self.plotter.set_layer_and_vector(layer)
         self.plotter.plot_reductions(
-            U_flatten, self.labels, title="U projections", file_name="U_projections_",
-        )
-
-        pass
-
-    def reduce_activations(self, layer):
-
-        self.plotter.set_layer_and_vector(layer)
-        self.plotter.plot_reductions(
-            self.activation_list[layer],
-            self.labels,
-            title="Input projections",
-            file_name="activation_",
+            U_flatten, self.labels, title="U projections", filename="U_projections_",
         )
 
         pass
@@ -116,12 +118,12 @@ class Analyser:
             U,
             self.labels,
             title="U projection_" + str(vector_index),
-            file_name="U_projections_" + str(vector_index) + "_",
+            filename="U_projections_" + str(vector_index) + "_",
         )
 
         pass
 
-    def create_all_plots(self, n=10):
+    def create_all_reduction_plots(self, n=10):
 
         for layer in range(self.number_of_layers):
             print("\nLayer:", layer)
@@ -145,34 +147,192 @@ class Analyser:
 
         pass
 
-    def print_profile_cluster_infos(self):
+    # ---- Test the decompositions ----
+
+    def create_all_singluarvalue_plots(self):
+
+        for layer in range(self.number_of_layers):
+            self.create_singluarvalue_plot(layer)
+
+        pass
+
+    def create_singluarvalue_plot(self, layer):
+
+        singular_values = self.s_list[layer]
+
+        self.plotter.set_layer_and_vector(layer)
+        self.plotter.plot_line_plot(
+            range(len(singular_values)),
+            singular_values,
+            "Singular Values",
+            "Value",
+            "k",
+            "singular_values",
+        )
+        pass
+
+    def test_all_decompositions(self, custom_ks=None):
 
         for layer in range(self.number_of_layers):
 
-            #  general infos
-            n_cluster = self.number_of_profile_clusters[layer]
-            cluster_labels = self.profile_clusters[layer]
+            print("\nLayer:", layer)
 
-            print("\n\n---Layer:", layer)
-            print("Number of layers: ", n_cluster)
+            if custom_ks is None:
+                k = self.k_list[layer]
+            else:
+                k = custom_ks[layer]
 
-            # cluster infos
-            for cluster in range(n_cluster):
+            self.test_decomposition(layer, k)
+
+    def test_decomposition(self, layer, k):
+
+        # declare
+        u = self.u_list[layer]
+        s = self.s_list[layer]
+        vh = self.vh_list[layer]
+        x = self.activation_list[layer]
+        xp1 = self.activation_list[layer + 1]
+
+        # truncuate
+        if self.side == "left":
+            u = u[:, :, :k]
+            vh = vh[:k, :]
+            s = s[:k]
+
+        # elif self.side == "right":
+        # todo
+
+        print(
+            "Stacked side:\t",
+            self.side,
+            "\nK:\t\t",
+            k,
+            "\nSize of u:\t",
+            u.shape,
+            "\nSize of s\t",
+            s.shape,
+            "\nSize of vh\t",
+            vh.shape,
+        )
+
+        # deviation tolerance
+        tol = 1e-3
+
+        if self.side == "left":
+            U = u
+
+            # 1. What is read:
+            x_ext = np.insert(x, x.shape[1], 1, axis=1)
+            read_in = vh @ x_ext.T
+
+            # 2. Scale
+            read_in_scaled = np.diag(s) @ read_in
+
+            # 3. Write to ouput
+            t = U @ read_in_scaled
+            xp1_hat = t[range(t.shape[0]), :, range(t.shape[0])]
+
+        elif self.side == "right":
+            # todo
+            VH = vh
+
+            # 1. What is read:
+            x_ext = np.insert(x, x.shape[1], 1, axis=1)
+            read_ins = VH @ x_ext.T
+
+            # pick first column of first read_in and so on
+            read_in = np.transpose(
+                read_ins[range(read_ins.shape[0]), :, range(read_ins.shape[0])]
+            )
+
+            # 2. Scale
+            read_in_scaled = np.diag(s) @ read_in
+
+            # 3. Write to output
+            xp1_hat = np.transpose(u @ read_in_scaled)
+
+        # 4. Compare to actual output
+        acc = np.sum(np.isclose(xp1_hat, xp1, atol=tol)) / xp1_hat.size
+        error = np.mean(np.abs(xp1_hat - xp1))
+
+        print(f"Reconstruction accuracy (tol={tol}):", acc)
+        print("Reconstruction AbsError:", error)
+
+        return acc, error
+
+    def create_all_reconstrcution_error_plots(self):
+
+        for layer in range(self.number_of_layers):
+
+            k_range = np.linspace(1, self.k_list[layer], 10).astype(int)
+            self.create_reconstrcution_error_plot(layer, k_range)
+
+    def create_reconstrcution_error_plot(self, layer, k_range):
+
+        # memory
+        errors = []
+        accuracies = []
+
+        for k in k_range:
+
+            print("\n-- K:", k)
+
+            # obtain decomposition
+            acc, error = self.test_decomposition(layer, k)
+
+            # store
+            errors.append(error)
+            accuracies.append(acc)
+
+        # plot
+        self.plotter.set_layer_and_vector(layer)
+        self.plotter.plot_line_plot(
+            k_range,
+            errors,
+            "Mean absolute error",
+            "MAE",
+            "Number of components",
+            "reconstruction_error",
+            xticks=k_range,
+        )
+        self.plotter.plot_line_plot(
+            k_range,
+            accuracies,
+            "Reconstruction Accuracy",
+            "Accuracy",
+            "Number of components",
+            "reconstruction_accuracy",
+            xticks=k_range,
+        )
+
+        pass
+
+    # ---- Test the clustering ----
+
+    def create_cluster_plot(self, layer):
+
+        (cluster_n, cluster_labels, cluster_centers) = self.clusters[layer]
+
+        self.plotter.plot_image(cluster_labels, title="", filename=None, aspect="auto")
+
+        pass
+
+    def print_cluster_shapes(self):
+        print("\nSide:", self.side)
+        for layer in range(self.number_of_layers):
+
+            #  cluster infos
+            (cluster_n, cluster_labels, cluster_centers) = self.clusters[layer]
+            sizes = []
+
+            for cluster in range(cluster_n):
 
                 # size of cluster
                 mask = cluster_labels == cluster
-                size = np.sum(mask)
+                sizes.append(np.sum(mask))
 
-                # samples in that cluster
-                labels_of_cluster_samples = self.labels[mask]
-                values, counts = np.unique(
-                    labels_of_cluster_samples, return_counts=True
-                )
-                most_frequent = values[np.argsort(counts)]
-
-                print("\nCluster:", cluster)
-                print("Size:", size)
-                print("Most Frequent labels:\t", most_frequent)
-                print("Frequencies:\t\t", np.sort(counts))
+            print("\nLayer:", layer)
+            print("Number of clusters:", cluster_n)
+            print("Number of clusters: ", sizes)
 
         pass
