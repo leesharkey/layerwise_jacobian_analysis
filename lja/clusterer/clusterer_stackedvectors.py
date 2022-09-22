@@ -81,12 +81,8 @@ class Clusterer:
             vectors = np.transpose(
                 vectors, (0, 2, 1)
             )  # [sample, vector_index, next_dimension]
-
-            # take subset of first k dimensions
             vectors = vectors[:, :k, :]
-            vectors = vectors.reshape(
-                -1, vectors.shape[1] * vectors.shape[2]
-            )  # this is different
+            vectors = vectors.reshape(vectors.shape[0] * vectors.shape[1], -1)
 
         elif self.side == "right":
             vectors = self.vh
@@ -94,6 +90,13 @@ class Clusterer:
         return vectors
 
     def format_cluster_labels(self, labels, layer, k):
+        if self.side == "left":
+            vectors = self.u_list[layer]
+            vectors = vectors[:, :, :k]
+            labels = labels.reshape(vectors.shape[0], vectors.shape[2])
+
+        elif self.side == "right":
+            vectors = self.vh
 
         return labels
 
@@ -104,7 +107,7 @@ class Clusterer:
         # reset
         self.clusters = []
 
-        for layer in range(self.number_of_layers):
+        for layer in range(self.number_of_layers - 1):
 
             # 1. Cluster
             if (number_of_clusters is not None) and (layer < len(number_of_clusters)):
@@ -129,7 +132,6 @@ class Clusterer:
 
         # 1. Find number of clusters
         vectors = self.format_vectors(layer, k)
-        print(vectors.shape)
         n_clusters, affinity_matrix = self.find_number_of_clusters(
             vectors, layer, plot=plot, n_neighbors=n_neighbors
         )
@@ -189,7 +191,7 @@ class Clusterer:
         self,
         vectors,
         layer,
-        max_number_of_clusters=20,
+        max_number_of_clusters=50,
         size_of_candidate_clusters=2,
         plot=False,
         n_neighbors=10,

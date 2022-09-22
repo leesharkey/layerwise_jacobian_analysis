@@ -15,6 +15,7 @@ class LTExtractor:
         self.linear_transformations = []
         self.results_path = "results/transformations/"
         self.labels = labels
+        self.preactivation = None
 
     def store(self, end_path):
 
@@ -46,6 +47,11 @@ class LTExtractor:
             path + "labels.npy", self.labels.detach().cpu().numpy(),
         )
 
+        # save labels
+        np.save(
+            path + "preactivations.npy", self.preactivation.detach().cpu().numpy(),
+        )
+
         # save number of layers
         np.save(
             path + "number_of_layers.npy", len(self.linear_transformations),
@@ -66,13 +72,14 @@ class LTExtractor:
             print("\n\nIndex :", i, "\nLayer:", layer, "\nAct:", act)
 
             # obtain linear transfromations for that layer
-            activation, linear_transformation = self.get_linear_transformation(
+            activation, linear_transformation, preact = self.get_linear_transformation(
                 layer, act, self.activations[i]
             )
 
             # store
             self.activations.append(activation)
             self.linear_transformations.append(linear_transformation)
+            self.preactivation = preact
 
         pass
 
@@ -99,7 +106,7 @@ class LTExtractor:
 
         self.test_transformation(x, y, linear_tranformations_ext, params_ext)
 
-        return y, linear_tranformations_ext
+        return y, linear_tranformations_ext, preact
 
     def test_transformation(self, x, y, linear_tranformations_ext, params_ext):
 

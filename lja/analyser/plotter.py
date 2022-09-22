@@ -60,6 +60,7 @@ class Plotter:
         plt.clf()
         plt.imshow(image, aspect=aspect)
         plt.colorbar()
+        plt.clim(-30, 30)
         self.present_image(title, filename)
 
         pass
@@ -73,35 +74,52 @@ class Plotter:
             x="x",
             y="y",
             hue="label",
+            style="style",
             palette=sns.color_palette(n_colors=len(set(data["label"]))),
             data=data,
             ax=ax,
-            s=20,
+            s=40,
         )
 
         # add labels
         if "text_labels" in list(data.columns):
             for idx, row in data.iterrows():
-                plt.text(row["x"], row["y"], row["text_labels"])
+                plt.text(row["x"], row["y"], row["text_labels"], size=4)
 
         self.present_image(title, filename)
 
         pass
 
+    def plot_scatter_simple(
+        self, x, y, xlabel="x", ylabel="y", title="", filename=None
+    ):
+
+        plt.close("all")
+        # plt.plot(x, y, "bo", markersize=2, alpha=1)
+        plt.plot(range(int(max(x))), range(int(max(x))), color="red")
+
+        plt.plot(x, y, "bo", markersize=0.1, alpha=0.2)
+        plt.ylabel(ylabel)
+        plt.xlabel(xlabel)
+        self.present_image(title, filename)
+
+        pass
+
     def plot_reduction(
-        self, type, M, labels, text_labels=None, title="", filename="test"
+        self, type, M, labels, text_labels=None, style=None, title="", filename=None
     ):
 
         # set up path and title
         title = type + ": " + title
-        filename = filename + type
+        if filename is not None:
+            filename = filename + type
         print("\n", title, "\t M-diemnsions: ", M.shape)
 
         # perfrom reduction
         if type == "tSNE":
-            res = TSNE(2, init="pca", learning_rate="auto", n_iter=2000).fit_transform(
-                M
-            )
+            res = TSNE(
+                2, init="pca", learning_rate="auto", n_iter=2000, n_jobs=1
+            ).fit_transform(M)
 
         elif type == "PCA":
             res = PCA(n_components=2).fit_transform(M)
@@ -118,7 +136,7 @@ class Plotter:
                 "text_labels": np.repeat("", len(labels))
                 if text_labels is None
                 else text_labels,
-                "style": "$f$",
+                "style": "$f$" if style is None else style,
             }
         )
 
@@ -126,10 +144,12 @@ class Plotter:
 
         pass
 
-    def plot_reductions(self, M, labels, text_labels=None, title="", filename="test"):
+    def plot_reductions(
+        self, M, labels, text_labels=None, style=None, title="", filename="test"
+    ):
 
         # t-SNE plot
-        self.plot_reduction("tSNE", M, labels, text_labels, title, filename)
+        self.plot_reduction("tSNE", M, labels, text_labels, style, title, filename)
 
         # PCA
         # self.plot_reduction("PCA", M, labels, x, title, filename)
@@ -147,6 +167,16 @@ class Plotter:
         plt.xlabel(xlabel)
         if xticks is not None:
             plt.xticks(x)
+
+        self.present_image(title, filename)
+
+        pass
+
+    def plot_histogram(self, x, title, filename):
+
+        # plot
+        plt.close("all")
+        plt.hist(x)
 
         self.present_image(title, filename)
 

@@ -237,6 +237,7 @@ class MnistNetworkTrainingManager(TrainingManager):
             dropout=self.config.dropout,
         )
         print(self.net)
+        print(self.device)
 
         self.train_dataset = torchvision.datasets.MNIST(
             root="data/mnist/",
@@ -261,6 +262,7 @@ class MnistNetworkTrainingManager(TrainingManager):
             model_name = self.config.load_model_name
             load_checkpoint_path = os.path.join(self.results_path, model_name)
             self.load_model_checkpoint(load_checkpoint_path, self.net)
+        pass
 
     def preprocess(self, images, labels):
         images = images.reshape(-1, 28 * 28).to(self.device)

@@ -5,6 +5,7 @@ from lja.analyser.dataloader import Dataloader
 import matplotlib.pyplot as plt
 import pandas as pd
 import itertools
+from numpy.linalg import norm
 
 
 class Constructor:
@@ -14,11 +15,13 @@ class Constructor:
         super(Constructor, self).__init__()
 
         self.path = path
-        self.plotter = Plotter("/features/" + path, show_plots)
+        self.plotter = Plotter("/features/", show_plots)
         self.data = Dataloader(path)
         self.number_of_layers = None
         self.side = None
         self.target = target
+        self.feature_memory = []
+        self.feature_memory_available = []
 
     def load(self, side="left"):
 
@@ -28,22 +31,45 @@ class Constructor:
         self.u_list = self.data.u_list
         self.vh_list = self.data.vh_list
         self.k_list = self.data.k_list
+        self.s_list = self.data.s_list
 
         pass
 
     def set_k_per_layer(self, k_per_layer):
 
         self.k_list = k_per_layer
+        self.u_list = []
+        self.vh_list = []
 
         for layer in range(self.number_of_layers):
             k = self.k_list[layer]
-            self.u_list.append(self.data.u_list[layer][:, :, :k])
-            self.vh_list.append(self.data.vh_list[layer][:k, :])
+            u = self.data.u_list[layer][:, :, :k]
+            vh = self.data.vh_list[layer][:k, :]
 
-    def set_plot_path(self, layer, feature_index):
+            if layer == 0:
+                input_dimension = vh.shape[1] - 1
+
+            feature_memory = np.zeros((u.shape[0], k, input_dimension))
+            feature_memory_available = np.zeros((u.shape[0], k))
+
+            self.u_list.append(u)
+            self.vh_list.append(vh)
+            self.feature_memory.append(feature_memory)
+            self.feature_memory_available.append(feature_memory_available)
+
+    def set_plot_path2(self, layer, feature_index, target_index):
         self.plotter.set_layer_and_vector(layer, feature_index)
         self.plot_path = "by_" + str(self.target) + "/granularity_" + self.granularity
         newpath = self.plotter.path + "/" + self.plot_path
+        if not os.path.exists(newpath):
+            os.makedirs(newpath)
+
+        pass
+
+    def set_plot_path(self, layer, feature_index, target_index):
+        self.plotter.set_layer_and_vector(layer, target_index)
+        self.plot_path = ""
+        newpath = self.plotter.path
         if not os.path.exists(newpath):
             os.makedirs(newpath)
 
@@ -121,20 +147,23 @@ class Constructor:
         PLots the feature as heat-map
         """
         # set path
-        self.set_plot_path(layer, feature_index)
+        self.set_plot_path(layer, feature_index, target_index)
+        filename = self.get_filename(feature_index, target_index, "plot")
+        file_path = self.plotter.path + filename + ".png"
 
-        self.plotter.plot_image(
-            feature.reshape(28, 28),
-            title="Layer: "
-            + str(layer)
-            + " Feature: "
-            + str(feature_index)
-            + " "
-            + str(self.target)
-            + ": "
-            + str(target_index),
-            filename=self.get_filename(feature_index, target_index, "plot"),
-        )
+        if not os.path.exists(file_path):
+            self.plotter.plot_image(
+                feature.reshape(28, 28),
+                title="Layer: "
+                + str(layer)
+                + " Feature: "
+                + str(feature_index)
+                + " "
+                + str(self.target)
+                + ": "
+                + str(target_index),
+                filename=filename,
+            )
 
         pass
 
@@ -145,7 +174,6 @@ class Constructor:
         target_index,
         plot=True,
         store=True,
-        similarity_function=np.dot,
         reuse_stored_features=True,
         store_all_computed_features=True,
     ):
@@ -156,27 +184,41 @@ class Constructor:
         target_index,                   - the index of the sample/profile/profile_cluster those write vectors be used for reconstruction
         plot=True,                      - whether a heat-map of the featuer should be stores
         store=True,                     - whether the feature should be stored
-        similarity_function             - similarity measure used to compare write and read vectors
         reuse_stored_features           - whether if already computed features should be loaded. Faster if enabled. Should be disabled for testing/dev.
         store_all_computed_features     - whether the features that are computed on the fly should be stored (slows down the computation)
         """
 
         # 0. Check if already computed:
         feature = None
+        already_stored = False
+
         if reuse_stored_features:
-            feature = self.load_feature(layer, feature_index, target_index)
+
+            # test if already loaded and in memory
+            if self.feature_memory_available[layer][target_index, feature_index] == 1:
+                feature = self.feature_memory[layer][target_index, feature_index, :]
+                already_stored = True
+
+            if reuse_stored_features:
+                feature = self.load_feature(layer, feature_index, target_index)
+
+                if feature is not None:
+                    self.feature_memory_available[layer][
+                        target_index, feature_index
+                    ] = 1
+                    self.feature_memory[layer][target_index, feature_index] = feature
+                    already_stored = True
 
         # Compute feature if not pre-computed
         if feature is None:
 
             # 1. Select the read vector
-            # TODO: we discrard the bias at the moment, overthink
-            feature_vector = self.vh_list[layer][feature_index, :-1]
+            read_vector = self.vh_list[layer][feature_index, :-1]
 
             if layer == 0:
 
                 # 2. Finished
-                feature = feature_vector
+                feature = read_vector
 
             else:
 
@@ -186,9 +228,11 @@ class Constructor:
                 )
 
                 # 4. Compute similarity between the write_vectors and the read_vector
-                similarity = []
-                for write_vector in write_vector_candidates:
-                    similarity.append(similarity_function(write_vector, feature_vector))
+                similarity = (
+                    np.dot(write_vector_candidates, read_vector)
+                    / (norm(write_vector_candidates, axis=1) * norm(read_vector))
+                    # * self.s_list[layer][feature_index]
+                )
 
                 # 5. Recursive idea: pick features of the previous layer as constructors
 
@@ -208,7 +252,6 @@ class Constructor:
                             target_index_next,
                             plot=False,
                             store=store_all_computed_features,
-                            similarity_function=similarity_function,
                             reuse_stored_features=reuse_stored_features,
                         )
                     )
@@ -218,15 +261,20 @@ class Constructor:
                 construction_vectors_weighted = (
                     np.diag(similarity) @ construction_vectors
                 )
+                # Assumption add corresponding singular value for scalig
                 construction_vectors_combined = np.sum(
                     construction_vectors_weighted, axis=0
                 )
                 feature = construction_vectors_combined
 
         if plot:
-            self.plot_feature(feature, layer, feature_index, target_index)
+            if True:
+                feature_masked = feature * self.data.activation_list[0][target_index]
+                self.plot_feature(feature_masked, layer, feature_index, target_index)
+            else:
+                self.plot_feature(feature, layer, feature_index, target_index)
 
-        if store:
+        if store and not already_stored:
             self.store_feature(feature, layer, feature_index, target_index)
 
         return feature
@@ -239,7 +287,6 @@ class Constructor:
         granularites=["profile_cluster"],
         plot=True,
         store=True,
-        similarity_function=np.dot,
         reuse_stored_features=True,
     ):
         """
@@ -275,7 +322,6 @@ class Constructor:
                 target_index,
                 plot=plot,
                 store=store,
-                similarity_function=similarity_function,
                 reuse_stored_features=reuse_stored_features,
             )
         pass
@@ -287,7 +333,13 @@ class ConstructorBySample(Constructor):
         self.set_granularity(granularity)
 
     def set_granularity(self, granularity):
-        if granularity in ["sample", "profile"]:
+        if granularity in [
+            "sample",
+            "profile",
+            "layer_average",
+            "vector_average",
+            "sample_average",
+        ]:
             self.granularity = granularity
         else:
             raise Exception(
@@ -326,7 +378,7 @@ class ConstructorBySample(Constructor):
         (from hidden to output direction)
         """
 
-        # the corresponding feature is defined by the sample index again: easy mapping
+        # the corresponding feature is ined by the sample index again: easy mapping
         return sample_index
 
 
