@@ -5,5 +5,5 @@ decomp = Decomposition("mnist/dropout/")
 decomp.load()
 
 # decompose
-decomp.decompose([600, 600, 600, 10], "left")
+decomp.decompose([50, 50, 50, 10], "left")
 decomp.store()

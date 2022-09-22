@@ -2,42 +2,40 @@ from lja.feature_constructor.feature_constructor import (
     ConstructorBySample,
     ConstructorByProfile,
 )
+import time
+import numpy as np
 
 # By sample
-if True:
-    constructor = ConstructorBySample(path="mnist/dropout/", show_plots=False)
-    constructor.load()
-    constructor.set_k_per_layer([100, 100, 100, 10])
-    constructor.set_granularity("sample")
+constructor = ConstructorBySample(path="mnist/dropout/", show_plots=False)
+constructor.load()
 
-    constructor.construct_multiple_features(
-        layers=[0, 1, 2, 3],
-        feature_indices=[0, 1],
-        target_indices=[0, 1, 101, 102, 201, 202, 901, 902],
-        granularites=["sample"],
-        plot=True,
-        store=True,
-    )
+# Params
+constructor.set_k_per_layer([20, 10, 10, 10])
+constructor.set_granularity("sample")
 
 
 if False:
-    constructor = ConstructorBySample(path="mnist/dropout_feature/", show_plots=False)
-    constructor.load_data(load_path="mnist/dropout/", side="left")
-
-    constructor.construct_single_feature(
-        layer=3,
-        feature_index=0,
-        target_index=4,
-        plot=True,
-        store=True,
-        reuse_stored_features=True,
-    )
-
+    start = time.time()
     constructor.construct_multiple_features(
-        layers=[1, 2],
-        feature_indices=[0, 1],
-        target_indices=[0, 1, 101, 102, 201, 202, 901, 902,],
-        granularites=["sample", "profile"],
-        plot=True,
+        layers=[1, 2, 3],
+        feature_indices=range(10),
+        target_indices=range(1000),
+        granularites=["sample"],
+        plot=False,
         store=True,
     )
+    end = time.time()
+    print("The time of execution of above program is :", end - start)
+
+if True:
+    start = time.time()
+    constructor.construct_multiple_features(
+        layers=[0, 1, 2, 3],
+        feature_indices=range(10),
+        target_indices=[352, 322],
+        granularites=["sample"],
+        plot=True,
+        store=False,
+    )
+    end = time.time()
+    print("The time of execution of above program is :", end - start)
